@@ -24,22 +24,50 @@ export interface UsageRecord {
 /**
  * Get user subscription from database
  * Can be called from Server Components, API Routes, or Server Actions
+ * Queries combined data from billing_status and profiles tables
  */
 export async function getUserSubscription(userId: string): Promise<Subscription | null> {
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('subscriptions')
+    
+    // Get subscription status from billing_status table
+    const { data: billingData, error: billingError } = await supabase
+      .from('billing_status')
       .select('*')
       .eq('user_id', userId)
       .single()
 
-    if (error) {
-      console.error('Failed to get subscription:', error)
+    if (billingError) {
+      console.error('Failed to get billing_status:', billingError)
       return null
     }
 
-    return data as Subscription
+    // Get stripe_customer_id from profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error('Failed to get profile:', profileError)
+      return null
+    }
+
+    // Combine data into Subscription format
+    const subscription: Subscription = {
+      id: userId, // Use user_id as id since billing_status doesn't have an id column
+      user_id: billingData.user_id,
+      plan_id: billingData.plan || 'free',
+      status: billingData.status || 'locked',
+      stripe_customer_id: profileData?.stripe_customer_id || null,
+      stripe_subscription_id: billingData.stripe_subscription_id || null,
+      current_period_start: null,
+      current_period_end: null,
+      updated_at: billingData.updated_at,
+    }
+
+    return subscription
   } catch (error) {
     console.error('Failed to get subscription:', error)
     return null
@@ -49,6 +77,7 @@ export async function getUserSubscription(userId: string): Promise<Subscription 
 /**
  * Update user subscription (admin/service role operation)
  * Used in API routes and webhook handlers
+ * Updates billing_status table and profiles table as needed
  */
 export async function updateUserSubscription(
   userId: string,
@@ -56,19 +85,41 @@ export async function updateUserSubscription(
 ): Promise<Subscription | null> {
   try {
     const admin = createAdminClient()
-    const { data, error } = await admin
-      .from('subscriptions')
-      .update(updates)
-      .eq('user_id', userId)
-      .select('*')
-      .single()
+    
+    // Build billing_status updates
+    const billingUpdates: any = {}
+    if (updates.plan_id) billingUpdates.plan = updates.plan_id
+    if (updates.status) billingUpdates.status = updates.status
+    if (updates.stripe_subscription_id) billingUpdates.stripe_subscription_id = updates.stripe_subscription_id
+    
+    // Update billing_status if there are changes
+    if (Object.keys(billingUpdates).length > 0) {
+      const { error: billingError } = await admin
+        .from('billing_status')
+        .update(billingUpdates)
+        .eq('user_id', userId)
 
-    if (error) {
-      console.error('Failed to update subscription:', error)
-      return null
+      if (billingError) {
+        console.error('Failed to update billing_status:', billingError)
+        return null
+      }
     }
 
-    return data as Subscription
+    // Update profiles if stripe_customer_id changed
+    if (updates.stripe_customer_id) {
+      const { error: profileError } = await admin
+        .from('profiles')
+        .update({ stripe_customer_id: updates.stripe_customer_id })
+        .eq('id', userId)
+
+      if (profileError) {
+        console.error('Failed to update profile:', profileError)
+        return null
+      }
+    }
+
+    // Fetch and return updated subscription
+    return getUserSubscription(userId)
   } catch (error) {
     console.error('Failed to update subscription:', error)
     return null

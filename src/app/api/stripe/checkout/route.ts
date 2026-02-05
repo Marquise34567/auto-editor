@@ -87,14 +87,8 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?canceled=1`,
     })
 
-    // Save session ID to subscriptions table for tracking
-    const supabase = await createSupabaseServerClient()
-    await supabase
-      .from('subscriptions')
-      .update({
-        stripe_subscription_id: session.id,
-      })
-      .eq('user_id', user.id)
+    // Note: Subscription status is updated by confirm-session endpoint and webhooks
+    // No need to update here as the session doesn't contain subscription data yet
 
     return NextResponse.json({
       sessionId: session.id,

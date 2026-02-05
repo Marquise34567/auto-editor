@@ -54,11 +54,11 @@ export async function GET(request: NextRequest) {
             email: user.email,
           })
 
-          // Create subscription if it doesn't exist
-          await supabase.from('subscriptions').insert({
+          // Create billing_status record if it doesn't exist
+          await supabase.from('billing_status').insert({
             user_id: user.id,
-            status: 'inactive',
-            plan: 'starter', // Default plan
+            plan: 'free',
+            status: 'locked',
           })
         }
       }

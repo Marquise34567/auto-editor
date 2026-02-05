@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    // Get user subscription
-    const { data: subscription } = await supabase
-      .from('subscriptions')
+    // Get user billing status
+    const { data: billingStatus } = await supabase
+      .from('billing_status')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         createdAt: user.created_at,
       },
       profile,
-      subscription,
+      billingStatus,
     });
   } catch (error) {
     console.error('[auth/me] Error:', error);

@@ -56,24 +56,31 @@ export async function POST(request: NextRequest) {
       if (userId && customerId && subscriptionId) {
         console.log('[webhook] Activating subscription:', { userId, plan });
 
-        // Update subscriptions table
-        await supabase
-          .from('subscriptions')
+        // Update billing_status table
+        const { error: billingError } = await supabase
+          .from('billing_status')
           .update({
             status: 'active',
-            stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
             plan: plan,
           })
           .eq('user_id', userId);
 
+        if (billingError) {
+          console.error('[webhook] Error updating billing_status:', billingError);
+        }
+
         // Update profile with Stripe customer ID
-        await supabase
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({ stripe_customer_id: customerId })
-          .eq('id', userId)
-          .select()
-          .single();
+          .eq('id', userId);
+
+        if (profileError) {
+          console.error('[webhook] Error updating profile:', profileError);
+        }
+
+        console.log('[webhook] Subscription activated:', { userId, plan, subscriptionId });
       }
     }
 
@@ -81,20 +88,56 @@ export async function POST(request: NextRequest) {
     if (event.type === 'customer.subscription.updated') {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer;
-      const status = subscription.status;
-      const currentPeriodEnd = (subscription as any).current_period_end;
+      const stripeStatus = subscription.status;
 
       if (customerId) {
-        console.log('[webhook] Updating subscription:', { customerId, status });
+        console.log('[webhook] Subscription updated:', { customerId, stripeStatus });
 
-        // Update subscriptions table with new status and period end
-        await supabase
-          .from('subscriptions')
+        // Map Stripe subscription status to our status
+        let status: 'active' | 'pending' | 'locked';
+        switch (stripeStatus) {
+          case 'active':
+          case 'trialing':
+            status = 'active';
+            break;
+          case 'past_due':
+          case 'incomplete':
+            status = 'active'; // Still has access during past_due
+            break;
+          case 'canceled':
+          case 'unpaid':
+          case 'incomplete_expired':
+            status = 'locked';
+            break;
+          default:
+            status = 'pending';
+        }
+
+        // Find user_id from profiles table using stripe_customer_id
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (profileError || !profile) {
+          console.error('[webhook] Could not find user for customer:', { customerId, error: profileError });
+          return;
+        }
+
+        // Update billing_status with new status
+        const { error: billingError } = await supabase
+          .from('billing_status')
           .update({
             status: status,
-            current_period_end: new Date(currentPeriodEnd * 1000).toISOString(),
           })
-          .eq('stripe_customer_id', customerId);
+          .eq('user_id', profile.id);
+
+        if (billingError) {
+          console.error('[webhook] Error updating billing_status:', billingError);
+        } else {
+          console.log('[webhook] Subscription status updated:', { userId: profile.id, status });
+        }
       }
     }
 
@@ -106,13 +149,31 @@ export async function POST(request: NextRequest) {
       if (customerId) {
         console.log('[webhook] Canceling subscription:', { customerId });
 
-        // Mark subscription as canceled
-        await supabase
-          .from('subscriptions')
+        // Find user_id from profiles table using stripe_customer_id
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (profileError || !profile) {
+          console.error('[webhook] Could not find user for customer:', { customerId, error: profileError });
+          return;
+        }
+
+        // Mark subscription as canceled by setting status to locked
+        const { error: billingError } = await supabase
+          .from('billing_status')
           .update({
-            status: 'canceled',
+            status: 'locked',
           })
-          .eq('stripe_customer_id', customerId);
+          .eq('user_id', profile.id);
+
+        if (billingError) {
+          console.error('[webhook] Error updating billing_status:', billingError);
+        } else {
+          console.log('[webhook] Subscription canceled:', { userId: profile.id });
+        }
       }
     }
 
@@ -122,14 +183,23 @@ export async function POST(request: NextRequest) {
       const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
 
       if (customerId) {
-        console.log('[webhook] Payment failed, marking past_due:', { customerId });
+        console.log('[webhook] Payment failed, marking status as active (subscription.updated will handle lock):', { customerId });
 
-        await supabase
-          .from('subscriptions')
-          .update({
-            status: 'past_due',
-          })
-          .eq('stripe_customer_id', customerId);
+        // Find user_id from profiles table using stripe_customer_id
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (profileError || !profile) {
+          console.error('[webhook] Could not find user for customer:', { customerId, error: profileError });
+          return;
+        }
+
+        // Payment failed events are typically followed by subscription.updated with past_due status
+        // We don't update here as subscription.updated will handle the status change
+        console.log('[webhook] Payment failed event received, awaiting subscription.updated:', { userId: profile.id });
       }
     }
 
