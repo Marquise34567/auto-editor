@@ -50,9 +50,26 @@ function PricingPageContent() {
         credentials: 'include',
       });
 
+      // Handle authentication required (401)
+      if (response.status === 401) {
+        console.log('[PricingPage] Authentication required, redirecting to login');
+        const currentPath = window.location.pathname;
+        router.push(`/login?next=${encodeURIComponent(currentPath)}`);
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        console.error('[PricingPage] API error:', errorData);
+        
+        // Check for AUTH_REQUIRED in error response
+        if (errorData.error === 'AUTH_REQUIRED') {
+          console.log('[PricingPage] AUTH_REQUIRED error, redirecting to login');
+          router.push('/login?next=/pricing');
+          return;
+        }
+        
+        throw new Error(errorData.message || errorData.error || 'Failed to create checkout session');
       }
 
       const { url } = await response.json();

@@ -33,11 +33,14 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('[checkout] Authentication failed:', authError?.message || 'No user session');
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: 'AUTH_REQUIRED', message: 'You must be logged in to subscribe' },
         { status: 401 }
       );
     }
+
+    console.log('[checkout] User authenticated:', user.id, user.email);
 
     // Parse request body
     const body = await request.json();
