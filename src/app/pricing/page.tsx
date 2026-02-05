@@ -19,6 +19,7 @@ function PricingPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [billingLive, setBillingLive] = useState<boolean | null>(null);
+  const [stripeConfigured, setStripeConfigured] = useState(true);
 
   // Check if billing is live
   useEffect(() => {
@@ -84,7 +85,14 @@ function PricingPageContent() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       console.error('[PricingPage] Checkout error:', err);
-      setError(`Failed to process checkout: ${msg}`);
+      
+      // Check if this is a Stripe configuration error
+      if (msg.includes('not configured') || msg.includes('PRICE')) {
+        setStripeConfigured(false);
+        setError('Stripe is not properly configured. Please contact support.');
+      } else {
+        setError(`Failed to process checkout: ${msg}`);
+      }
     }
   };
 
@@ -238,14 +246,21 @@ function PricingPageContent() {
                   {/* CTA Button */}
                   <button
                     onClick={() => handleUpgrade(plan.id)}
-                    disabled={billingLive === false && price > 0}
+                    disabled={billingLive === false || !stripeConfigured}
+                    title={
+                      billingLive === false 
+                        ? 'Billing will be available soon' 
+                        : !stripeConfigured 
+                        ? 'Stripe configuration incomplete'
+                        : ''
+                    }
                     className={`w-full py-3 sm:py-2.5 rounded-full font-semibold text-sm transition-all mb-5 sm:mb-6 min-h-11 ${
                       plan.highlighted
                         ? 'bg-white text-black shadow-lg shadow-white/10 hover:bg-white/90'
                         : 'bg-white/10 text-white hover:bg-white/20 border border-white/10'
-                    } ${billingLive === false && price > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${(billingLive === false || !stripeConfigured) && price > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {billingLive === false && price > 0 ? 'Coming Soon' : plan.ctaText}
+                    {billingLive === false && price > 0 ? 'Coming Soon' : !stripeConfigured && price > 0 ? 'Temporarily Unavailable' : plan.ctaText}
                   </button>
 
                   {/* Features - Condensed */}

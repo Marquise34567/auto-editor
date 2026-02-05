@@ -11,21 +11,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getBillingConfig, isBillingEnabled, getPlanPriceId, getPlanMetadata } from '@/lib/billing/config';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
+import { isBillingLive } from '@/lib/server/subscription';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-        // Validate Stripe configuration
-        if (!isStripeConfigured()) {
-          return NextResponse.json(
-            { error: 'Stripe is not configured on the server' },
-            { status: 500 }
-          );
-        }
+    // Check if billing is live (CRITICAL SAFETY CHECK)
+    if (!isBillingLive()) {
+      return NextResponse.json(
+        { 
+          error: 'Billing is not active yet. Set BILLING_LIVE=true to enable live billing.',
+          code: 'BILLING_NOT_LIVE'
+        },
+        { status: 403 }
+      );
+    }
 
-        const stripe = getStripe();
+    // Validate Stripe configuration
+    if (!isStripeConfigured()) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured on the server' },
+        { status: 500 }
+      );
+    }
+
+    const stripe = getStripe();
 
     const billingConfig = getBillingConfig();
 
@@ -70,8 +82,12 @@ export async function POST(request: NextRequest) {
     // Get price ID for the plan
     const priceId = getPlanPriceId(planLower);
     if (!priceId) {
+      console.error('[checkout] Missing price ID for plan:', planLower);
       return NextResponse.json(
-        { error: `No price ID configured for plan: ${planLower}. Set STRIPE_PRICE_${planLower.toUpperCase()}` },
+        { 
+          error: `Pricing not configured for ${planLower} plan. Contact support.`,
+          code: 'PRICE_NOT_CONFIGURED'
+        },
         { status: 500 }
       );
     }
