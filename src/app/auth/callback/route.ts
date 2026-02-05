@@ -2,6 +2,9 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * Auth Callback Route
  * Handles Supabase OAuth/email confirmation callbacks
@@ -31,9 +34,11 @@ export async function GET(request: NextRequest) {
       }
     )
 
+    console.log('[auth:callback] Exchanging code for session...');
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      console.log('[auth:callback] ✓ Session exchanged successfully');
       // Create profile if it doesn't exist
       const {
         data: { user },
@@ -64,8 +69,13 @@ export async function GET(request: NextRequest) {
       }
 
       // Redirect to next page or editor
+      console.log('[auth:callback] Redirecting to:', next);
       return NextResponse.redirect(new URL(next, request.url))
+    } else {
+      console.error('[auth:callback] Failed to exchange code:', error.message);
     }
+  } else {
+    console.error('[auth:callback] No code provided in callback');
   }
 
   // Redirect to login if there was an error
