@@ -70,9 +70,12 @@ function PricingPageContent() {
         console.error('[PricingPage:handleUpgrade] Checkout API error:', errorData);
         
         if (response.status === 401) {
-          console.log('[PricingPage:handleUpgrade] Session expired, redirecting to login');
-          console.log('[PricingPage:handleUpgrade] checkout:unauthorized');
-          router.push('/login?redirect=/pricing');
+          console.log('[PricingPage:handleUpgrade] checkout:unauthorized - Session expired or missing');
+          // Show friendly message and redirect to login
+          setError('Please sign in to upgrade.');
+          setTimeout(() => {
+            router.push('/login?redirect=/pricing');
+          }, 1500);
           return;
         }
         

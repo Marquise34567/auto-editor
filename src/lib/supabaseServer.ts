@@ -2,6 +2,10 @@
  * Supabase Server Client
  * Used in Server Components, API Routes, and Server Actions
  * Integrates with Next.js cookies() for session persistence
+ * 
+ * CRITICAL: This client automatically handles session refresh when auth.getUser() is called.
+ * The setAll callback updates cookies in the response, which persists the refreshed session
+ * back to the browser.
  */
 
 import { createServerClient } from '@supabase/ssr'

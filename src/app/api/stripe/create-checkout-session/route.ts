@@ -8,7 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { getPlanPriceId, getPlanMetadata } from '@/lib/billing/config';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
 
@@ -17,9 +18,22 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // === LOGGING: Request metadata ===
+    const requestHeaders = request.headers;
+    const cookieHeader = requestHeaders.get('cookie') || '';
+    console.log('[checkout:hit] POST /api/stripe/create-checkout-session');
+    console.log('[checkout:cookies_count] Cookie header present:', !!cookieHeader);
+    console.log('[checkout:cookies_count] Cookie length:', cookieHeader.length);
+    
+    // Log individual cookies for debugging
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
+    console.log('[checkout:cookies_count] Total cookies:', allCookies.length);
+    console.log('[checkout:cookies_count] Cookie names:', allCookies.map(c => c.name).join(', '));
+
     // Validate Stripe configuration - REQUIRED
     if (!isStripeConfigured()) {
-      console.error('[checkout] Stripe is not configured. Set STRIPE_SECRET_KEY.');
+      console.error('[checkout:error] Stripe is not configured. Set STRIPE_SECRET_KEY.');
       return NextResponse.json(
         { error: 'Stripe is not configured. Contact support.' },
         { status: 500 }
@@ -28,19 +42,62 @@ export async function POST(request: NextRequest) {
 
     const stripe = getStripe();
 
-    // Verify authentication
-    const supabase = await createClient();
+    // === LOGGING: Auth attempt ===
+    console.log('[checkout:auth] Creating Supabase client and checking session...');
+    
+    // Create Supabase client with standard SSR cookie handling
+    // cookies() from next/headers automatically handles request/response cookie sync
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch (error) {
+              // Can ignore - cookies() will automatically sync to response
+              console.error('[checkout:cookie_error]', error);
+            }
+          },
+        },
+      }
+    );
+
+    console.log('[checkout:auth] Calling supabase.auth.getUser()...');
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      console.error('[checkout] Authentication failed:', authError?.message || 'No user session');
+    if (authError) {
+      console.error('[checkout:auth_error] Auth error:', authError.message);
+      console.error('[checkout:auth_error] Error details:', authError);
       return NextResponse.json(
-        { error: 'AUTH_REQUIRED', message: 'You must be logged in to subscribe' },
+        { 
+          error: 'Unauthorized',
+          message: 'Please sign in to upgrade.'
+        },
         { status: 401 }
       );
     }
 
-    console.log('[checkout] User authenticated:', user.id, user.email);
+    if (!user) {
+      console.error('[checkout:no_session] No user found in session');
+      console.error('[checkout:no_session] Debug - Cookie header:', cookieHeader.substring(0, 100));
+      console.error('[checkout:no_session] Debug - Parsed cookies:', allCookies.length, 'cookies available');
+      return NextResponse.json(
+        { 
+          error: 'Unauthorized',
+          message: 'Please sign in to upgrade.'
+        },
+        { status: 401 }
+      );
+    }
+
+    console.log('[checkout:userId] ✓ User authenticated:', user.id, user.email);
 
     // Parse request body
     const body = await request.json();
@@ -141,20 +198,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('[checkout] Session created:', {
+    console.log('[checkout:stripe_session_created] ✓ Session created:', {
       sessionId: session.id,
       url: session.url,
     });
 
+    // cookies() automatically syncs set cookies to the response
     return NextResponse.json({
       url: session.url,
       sessionId: session.id,
     });
   } catch (error) {
-    console.error('[checkout] Error:', error);
+    console.error('[checkout:error] Fatal error:', error);
     const message = error instanceof Error ? error.message : 'Failed to create checkout session';
     return NextResponse.json(
-      { error: message },
+      { error: message, message: 'Unable to process checkout. Please try again.' },
       { status: 500 }
     );
   }

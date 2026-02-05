@@ -14,24 +14,33 @@ export interface AuthUser {
  */
 export async function checkAuth(): Promise<AuthUser | null> {
   try {
+    console.log('[auth:checkAuth] Calling /api/auth/me with credentials:include...');
     const response = await fetch('/api/auth/me', {
       credentials: 'include',
     });
 
+    console.log('[auth:checkAuth] Response status:', response.status);
+    console.log('[auth:checkAuth] Response ok:', response.ok);
+
     if (!response.ok) {
-      console.log('[auth] Not authenticated (status:', response.status + ')');
+      const errorData = await response.json().catch(() => ({}));
+      console.log('[auth:checkAuth:unauthorized] Not authenticated. Status:', response.status);
+      console.log('[auth:checkAuth:unauthorized] Error detail:', errorData);
       return null;
     }
 
     const data = await response.json();
+    console.log('[auth:checkAuth] Response data:', { success: data.success, hasUser: !!data.user });
+    
     if (data.user) {
-      console.log('[auth] User authenticated:', data.user.id);
+      console.log('[auth:checkAuth:success] User authenticated:', data.user.id);
       return data.user;
     }
 
+    console.log('[auth:checkAuth:no_user] Response ok but no user in data');
     return null;
   } catch (error) {
-    console.error('[auth] Failed to check authentication:', error);
+    console.error('[auth:checkAuth:exception] Failed to check authentication:', error);
     return null;
   }
 }
