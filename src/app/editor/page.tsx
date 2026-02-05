@@ -88,6 +88,7 @@ const statusToStep: Record<string, number> = {
 };
 
 export default function EditorPage() {
+  const buildId = process.env.NEXT_PUBLIC_BUILD_ID || "dev";
   const [title, setTitle] = useState("Creator sprint cut");
   const [file, setFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -169,6 +170,10 @@ export default function EditorPage() {
       // ignore
     }
   };
+
+  useEffect(() => {
+    console.log("[client] buildId:", buildId);
+  }, [buildId]);
 
   // Load billing status on mount from server
   useEffect(() => {
@@ -451,6 +456,9 @@ export default function EditorPage() {
         trackPlausibleEvent("UploadVideo");
         uploadTrackedRef.current = true;
       }
+
+      console.log("[client] upload-url endpoint:", "/api/upload-url");
+      console.log("[client] analyze endpoint:", "/api/analyze");
 
       // Step 1: Upload video to Supabase Storage
       console.log("=== Starting Video Upload to Storage ===");

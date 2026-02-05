@@ -7,6 +7,7 @@ import { Logo } from '@/components/Logo';
 import { MobileNav } from '@/components/MobileNav';
 import { UserNav } from '@/components/UserNav';
 import { createClient } from '@/lib/supabase/client';
+import { trackPostHogEvent, trackPlausibleEvent } from '@/lib/analytics/client';
 
 type FormMode = 'login' | 'signup';
 
@@ -103,6 +104,8 @@ function AuthPageContent() {
 
         if (data.session) {
           console.log('[login] Login successful:', data.user.email);
+          trackPostHogEvent('login_completed');
+          trackPlausibleEvent('LoginSuccess');
           // Redirect to pricing page (user will select a plan)
           router.push('/pricing');
         } else {
@@ -111,6 +114,7 @@ function AuthPageContent() {
         }
       } else {
         console.log('[signup] Starting signup for:', email);
+        trackPlausibleEvent('SignupClick');
         
         // Validate signup form
         if (!email || !password || !confirmPassword) {
@@ -149,6 +153,7 @@ function AuthPageContent() {
 
         if (data.user) {
           console.log('[signup] Signup successful:', data.user.email);
+          trackPostHogEvent('signup_completed');
           
           // Check if email confirmation is required
           if (data.user.identities && data.user.identities.length === 0) {

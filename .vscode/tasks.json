@@ -1,0 +1,130 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev Server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*ready.*",
+          "endsPattern": "^.*Local:.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "group": {
+        "kind": "build"
+      },
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test Auth: Signup",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$body = @{email='testuser@example.com';password='TestPass123';confirmPassword='TestPass123'} | ConvertTo-Json; Write-Host '📝 Signing up...'; curl.exe -X POST http://localhost:3000/api/auth/signup -H 'Content-Type: application/json' -d $body -s | ConvertFrom-Json | ConvertTo-Json"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test Auth: Login",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$body = @{email='testuser@example.com';password='TestPass123'} | ConvertTo-Json; Write-Host '🔐 Logging in...'; curl.exe -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d $body -s | ConvertFrom-Json | ConvertTo-Json"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test Auth: Get User (/api/auth/me)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "Write-Host '👤 Getting current user...'; Write-Host ''; curl.exe -X GET http://localhost:3000/api/auth/me -H 'Content-Type: application/json' -s | ConvertFrom-Json | ConvertTo-Json"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Test Auth: Logout",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "Write-Host '🚪 Logging out...'; curl.exe -X POST http://localhost:3000/api/auth/logout -H 'Content-Type: application/json' -s | ConvertFrom-Json | ConvertTo-Json"
+      ],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Lint",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "lint"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Clean & Rebuild",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "Write-Host '🧹 Cleaning...'; rm -r .next -Force -ErrorAction SilentlyContinue; rm -r node_modules/.cache -Force -ErrorAction SilentlyContinue; Write-Host '✓ Clean complete'; Write-Host ''; Write-Host '🔨 Building...'; npm run build"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}

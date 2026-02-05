@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
+import { trackPostHogEvent, trackPlausibleEvent } from '@/lib/analytics/client';
 
 interface BillingStatus {
   plan: string;
@@ -15,6 +16,7 @@ function SuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const upgradeTrackedRef = useRef(false);
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
@@ -45,6 +47,12 @@ function SuccessPageContent() {
         }
 
         console.log('[billing-success] Session confirmed:', data);
+
+        if (!upgradeTrackedRef.current) {
+          trackPostHogEvent('subscription_upgraded', { plan: data.plan });
+          trackPlausibleEvent('SubscriptionUpgrade');
+          upgradeTrackedRef.current = true;
+        }
 
         setBillingStatus({
           plan: data.plan,

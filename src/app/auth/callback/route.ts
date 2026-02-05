@@ -1,6 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { createApiRouteClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,23 +15,9 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') || '/editor'
 
   if (code) {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
+    // Create response object that will be returned
+    const response = NextResponse.next()
+    const { supabase } = await createApiRouteClient(response)
 
     console.log('[auth:callback] Exchanging code for session...');
     const { error } = await supabase.auth.exchangeCodeForSession(code)
@@ -70,7 +55,14 @@ export async function GET(request: NextRequest) {
 
       // Redirect to next page or editor
       console.log('[auth:callback] Redirecting to:', next);
-      return NextResponse.redirect(new URL(next, request.url))
+      const redirectResponse = NextResponse.redirect(new URL(next, request.url))
+      
+      // Copy cookies from response to redirect response
+      response.cookies.getAll().forEach(({ name, value }) => {
+        redirectResponse.cookies.set(name, value);
+      });
+      
+      return redirectResponse;
     } else {
       console.error('[auth:callback] Failed to exchange code:', error.message);
     }

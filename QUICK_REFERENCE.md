@@ -1,5 +1,73 @@
 # 🚀 Quick Reference - Commands & Links
 
+## ⚡ SUPER QUICK START
+
+**Start development right now:**
+```bash
+# Option 1: VS Code (Recommended)
+Ctrl+Shift+B  →  Select "Dev Server"  →  Open http://localhost:3000
+
+# Option 2: Terminal
+npm run dev
+```
+
+---
+
+## 🎯 Most Important Commands
+
+### Development (Ctrl+Shift+B)
+| Task | Keyboard | What it does |
+|------|----------|---|
+| **Dev Server** | `Ctrl+Shift+B` | Start with hot reload |
+| **Build** | `Ctrl+Shift+B` | Production build |
+| **Lint** | `Ctrl+Shift+B` | Check code quality |
+
+### Testing Auth (Ctrl+Shift+T)
+| Task | Do This | Details |
+|------|---------|---------|
+| **Signup** | `Ctrl+Shift+T` | Create test user |
+| **Login** | `Ctrl+Shift+T` | Sign in |
+| **Get User** | `Ctrl+Shift+T` | Fetch session |
+| **Logout** | `Ctrl+Shift+T` | Sign out |
+
+### Via Terminal
+```bash
+# Test signup
+curl -X POST http://localhost:3000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{"email":"test@example.com","password":"test123","confirmPassword":"test123"}'
+
+# Test get user (should work with cookies!)
+curl http://localhost:3000/api/auth/me -b cookies.txt
+
+# Test logout
+curl -X POST http://localhost:3000/api/auth/logout -b cookies.txt
+```
+
+---
+
+## 🔐 NEW: Supabase Auth SSR Fix
+
+**IMPLEMENTED:** Session cookies now work! `/api/auth/me` returns 200 when logged in
+
+- ✅ Browser sends cookies to API routes
+- ✅ Server properly returns Set-Cookie headers  
+- ✅ Sessions persist across page refreshes
+- ✅ All API routes tested and working
+
+**Quick Test:**
+1. Sign in at http://localhost:3000
+2. Check DevTools → Application → Cookies → See `sb-*-auth-token`
+3. Refresh page - stay logged in ✓
+4. Call `/api/auth/me` in console - returns user ✓
+
+**Documentation:**
+- Read: `SUPABASE_AUTH_SSR_FIX.md` (complete guide)
+- Quick: `DEVELOPMENT.md` (workflow guide)
+
+---
+
 ## Terminal Commands
 
 ### Development
@@ -11,7 +79,7 @@ npm run dev
 npm run build
 
 # Start production server (after build)
-npm run start
+npm start
 
 # Check build errors
 npm run build 2>&1 | grep -i error
@@ -96,11 +164,21 @@ curl -X POST http://localhost:3000/api/stripe/checkout \
 
 ## 📝 File Locations
 
-### Setup Guides (Start Here)
+### Documentation (Read These)
 ```
-SUPABASE_AUTH_STRIPE_SETUP.md    ← Complete step-by-step guide
+SUPABASE_AUTH_SSR_FIX.md         ← Complete auth guide (NEW!)
+DEVELOPMENT.md                    ← Dev workflow guide (NEW!)
+IMPLEMENTATION_STATUS.md          ← What's been completed (NEW!)
+SUPABASE_AUTH_STRIPE_SETUP.md    ← Full integration guide
 IMPLEMENTATION_CHECKLIST.md      ← Task checklist + timeline
 GITHUB_PUSH_GUIDE.md             ← How to push to GitHub
+```
+
+### VS Code Config (Already Set Up)
+```
+.vscode/tasks.json               ← 8 development tasks
+.vscode/launch.json              ← Debugger config
+.vscode/settings.json            ← Editor settings
 ```
 
 ### Configuration Files (Edit/Review)
@@ -113,14 +191,14 @@ supabase/schema.sql              ← Database schema (deploy to Supabase)
 ### Code Files (All Complete)
 ```
 middleware.ts                              ← Route protection
-src/lib/supabaseClient.ts                  ← Browser client
-src/lib/supabaseServer.ts                  ← Server client
+src/lib/supabase/server.ts                 ← Server client (FIXED!)
+src/lib/supabase/client.ts                 ← Browser client
 src/lib/auth.ts                            ← Auth helpers
 src/app/auth/callback/route.ts             ← OAuth callback
 src/app/api/auth/login/route.ts            ← Login endpoint
 src/app/api/auth/signup/route.ts           ← Signup endpoint
 src/app/api/auth/logout/route.ts           ← Logout endpoint
-src/app/api/auth/me/route.ts               ← Session endpoint
+src/app/api/auth/me/route.ts               ← Session endpoint (FIXED!)
 src/app/api/stripe/checkout/route.ts       ← Checkout endpoint
 src/app/api/stripe/webhook/route.ts        ← Webhook placeholder
 ```
@@ -249,6 +327,11 @@ git push origin main
 
 ## 🔧 Troubleshooting Quick Links
 
+### 🟢 NEW: Sessions Not Persisting? (Auth Fix)
+- ✅ FIXED: Browser now sends cookies to /api/auth/me
+- ✅ READ: `SUPABASE_AUTH_SSR_FIX.md` for complete guide
+- ✅ TEST: Use tasks (Ctrl+Shift+T) to verify auth flow
+
 ### Can't Login Locally?
 - Check: Is .env.local created with SUPABASE keys?
 - Check: Did Supabase schema deploy? (See supabase/schema.sql)
@@ -278,7 +361,28 @@ git push origin main
 ## 📚 Documentation Structure
 
 ```
-SUPABASE_AUTH_STRIPE_SETUP.md (Main Guide - Start Here)
+SUPABASE_AUTH_SSR_FIX.md          (Complete Auth Guide - 500+ lines)
+├── Problem & Solution
+├── All Code Files (7 files)
+├── Testing Instructions
+├── Supabase Dashboard Config
+└── Troubleshooting
+
+DEVELOPMENT.md                    (Workflow Guide - 400+ lines)
+├── Quick Start
+├── VS Code Tasks Usage
+├── Manual Testing
+├── Debugging Instructions
+└── Common Tasks
+
+IMPLEMENTATION_STATUS.md          (Completion Summary)
+├── Deliverables Checklist
+├── Files Changed/Created
+├── Security Features
+├── Available Commands
+└── Quality Checklist
+
+SUPABASE_AUTH_STRIPE_SETUP.md     (Full Integration Guide)
 ├── Part 1: Supabase Setup (6 steps)
 ├── Part 2: Local Testing (with test flow)
 ├── Part 3: Stripe Integration (verify products)
@@ -287,14 +391,14 @@ SUPABASE_AUTH_STRIPE_SETUP.md (Main Guide - Start Here)
 ├── Troubleshooting (5 issues)
 └── Webhook Setup (for later)
 
-IMPLEMENTATION_CHECKLIST.md (This Week's Tasks)
+IMPLEMENTATION_CHECKLIST.md       (This Week's Tasks)
 ├── Code Implementation (✅ Done)
 ├── What's Left (For You)
 ├── Files You Need to Edit
 ├── Environment Variables Reference
 └── Testing Checklist
 
-GITHUB_PUSH_GUIDE.md (How to Push Code)
+GITHUB_PUSH_GUIDE.md              (How to Push Code)
 ├── Quick Commands
 ├── Detailed Steps
 ├── File Summary
@@ -304,6 +408,8 @@ GITHUB_PUSH_GUIDE.md (How to Push Code)
 ---
 
 ## ✨ Key Callouts
+
+🟢 **FIXED**: Session cookies now work! Browser sends auth to /api/auth/me
 
 🔴 **CRITICAL**: Create .env.local before running `npm run dev` (or you'll get auth errors)
 
@@ -315,12 +421,15 @@ GITHUB_PUSH_GUIDE.md (How to Push Code)
 
 ## 🆘 Get Help
 
-1. **Check SUPABASE_AUTH_STRIPE_SETUP.md** (answers 90% of questions)
-2. **Search error message** in setup guide troubleshooting section
-3. **Check Vercel logs**: Vercel Dashboard → Deployments → Latest → Logs
-4. **Check browser console**: F12 → Console tab (look for red errors)
-5. **Check terminal**: npm run dev output (scroll up for initial errors)
+1. **Auth issue?** Check `SUPABASE_AUTH_SSR_FIX.md` (complete guide)
+2. **Dev workflow?** Check `DEVELOPMENT.md` (step-by-step)
+3. **Stuck?** Search for your error in any guide's troubleshooting section
+4. **Browser console**: F12 → Console tab (look for red errors)
+5. **Server logs**: npm run dev output (scroll up for initial errors)
+6. **Vercel logs**: Dashboard → Deployments → Latest → Logs
 
 ---
 
-**Ready to start?** 👉 Open `SUPABASE_AUTH_STRIPE_SETUP.md` and follow Part 1 (Supabase Setup)
+**Ready to start?** 👉 Run `npm run dev` or press `Ctrl+Shift+B` → "Dev Server"
+
+

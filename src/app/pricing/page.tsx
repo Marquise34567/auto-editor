@@ -11,6 +11,7 @@ import { UserNav } from '@/components/UserNav';
 import { createCheckoutUrl, storeReturnTo, getCurrentPath } from '@/lib/client/returnTo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { requireAuthOrRedirect } from '@/lib/client/auth';
+import { trackPostHogEvent, trackPlausibleEvent } from '@/lib/analytics/client';
 
 type BillingPeriod = 'monthly' | 'annual';
 
@@ -42,6 +43,7 @@ function PricingPageContent() {
       setError(null);
       
       console.log('[PricingPage:handleUpgrade] Plan selected:', { plan: planId });
+      trackPostHogEvent('pricing_plan_clicked', { plan: planId });
 
       // STEP 1: Check authentication BEFORE making API call
       console.log('[PricingPage:handleUpgrade] Checking authentication...');
@@ -56,6 +58,8 @@ function PricingPageContent() {
       // STEP 2: User is authenticated, proceed with checkout
       console.log('[PricingPage:handleUpgrade] User authenticated, creating checkout session:', { userId: user.id, plan: planId });
       console.log('[PricingPage:handleUpgrade] checkout:creating_session');
+      trackPostHogEvent('checkout_started');
+      trackPlausibleEvent('CheckoutStart');
 
       // Call Stripe checkout endpoint
       const response = await fetch('/api/stripe/create-checkout-session', {
@@ -71,6 +75,8 @@ function PricingPageContent() {
         
         if (response.status === 401) {
           console.log('[PricingPage:handleUpgrade] checkout:unauthorized - Session expired or missing');
+          trackPostHogEvent('checkout_failed', { reason: 'unauthorized' });
+          trackPlausibleEvent('CheckoutFail');
           // Show friendly message and redirect to login
           setError('Please sign in to upgrade.');
           setTimeout(() => {
@@ -79,7 +85,10 @@ function PricingPageContent() {
           return;
         }
         
-        throw new Error(errorData.message || errorData.error || 'Failed to create checkout session');
+        const reason = errorData.message || errorData.error || 'Failed to create checkout session';
+        trackPostHogEvent('checkout_failed', { reason });
+        trackPlausibleEvent('CheckoutFail');
+        throw new Error(reason);
       }
 
       const { url } = await response.json();
@@ -95,6 +104,8 @@ function PricingPageContent() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       console.error('[PricingPage:handleUpgrade] Error:', msg);
+      trackPostHogEvent('checkout_failed', { reason: msg });
+      trackPlausibleEvent('CheckoutFail');
       setError(`Unable to process upgrade: ${msg} Please sign in to upgrade.`);
     }
   };

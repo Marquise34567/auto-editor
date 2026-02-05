@@ -3,31 +3,33 @@
  * GET /api/auth/me
  * 
  * Returns authenticated user from Supabase session
+ * Properly handles session cookies for SSR
  */
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { createApiRouteClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // === LOGGING: Request check ===
+    // === LOGGING: Request diagnostics ===
     const cookieHeader = request.headers.get('cookie') || '';
-    console.log('[auth/me:hit] GET /api/auth/me');
-    console.log('[auth/me:debug] Cookie header present:', !!cookieHeader);
-    console.log('[auth/me:debug] Cookie length:', cookieHeader.length);
+    console.log('[api:auth:me] GET /api/auth/me');
+    console.log('[api:auth:me] Cookie header present:', !!cookieHeader);
+    console.log('[api:auth:me] Cookie length:', cookieHeader.length);
 
-    // Create Supabase client
-    const supabase = await createSupabaseServerClient();
+    // Create response object to hold cookies
+    const response = NextResponse.json({ success: false })
+    const { supabase } = await createApiRouteClient(response)
 
     // Get current user from session
-    console.log('[auth/me:auth] Calling supabase.auth.getUser()...');
+    console.log('[api:auth:me] Calling supabase.auth.getUser()...');
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error) {
-      console.error('[auth/me:auth_error] Auth error:', error.message);
+      console.error('[api:auth:me] Auth error:', error.message);
       return NextResponse.json(
         { 
           success: false, 
@@ -40,15 +42,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (!user) {
-      console.error('[auth/me:no_session] No user found');
-      console.log('[auth/me:no_session:debug] Cookie header sample:', cookieHeader.substring(0, 50));
+      console.error('[api:auth:me] No user found in session');
+      console.log('[api:auth:me] Request cookies:', cookieHeader.substring(0, 100));
       return NextResponse.json(
-        { success: false, user: null },
+        { success: false, user: null, error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    console.log('[auth/me:userId] User found:', user.id, user.email);
+    console.log('[api:auth:me] User found:', user.id, user.email);
 
     // Get user profile from database
     const { data: profile } = await supabase
@@ -64,6 +66,8 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .single();
 
+    // Return success response with user data
+    // Cookies are already set on response from createApiRouteClient
     return NextResponse.json({
       success: true,
       user: {
@@ -75,7 +79,7 @@ export async function GET(request: NextRequest) {
       billingStatus,
     });
   } catch (error) {
-    console.error('[auth/me] Error:', error);
+    console.error('[api:auth:me] Error:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to get session' },
       { status: 500 }

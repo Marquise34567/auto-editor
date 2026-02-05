@@ -3,13 +3,14 @@
  * POST /api/auth/signup
  * 
  * Uses Supabase Auth to register new users
+ * Sends confirmation email and sets initial session
  */
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createApiRouteClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,8 +50,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create Supabase client
-    const supabase = await createClient();
+    // Create Supabase client with proper response cookie handling
+    const responseObj = NextResponse.json({ success: false })
+    const { supabase, response } = await createApiRouteClient(responseObj)
 
     // Get redirect URL from request origin or fallback
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -58,11 +60,12 @@ export async function POST(request: NextRequest) {
 
     // Debug log in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[signup] Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log('[signup] Redirect URL:', redirectUrl);
+      console.log('[api:auth:signup] Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log('[api:auth:signup] Redirect URL:', redirectUrl);
     }
 
     // Sign up with Supabase
+    console.log('[api:auth:signup] Signing up user:', email);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('[signup] Supabase error:', error);
+      console.error('[api:auth:signup] Supabase error:', error);
       return NextResponse.json(
         { success: false, error: error.message || 'Signup failed' },
         { status: 400 }
@@ -86,10 +89,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('[api:auth:signup] Signup successful, user:', data.user.id);
+
     // Note: profiles and billing_status are created by the database trigger
     // (see supabase/migrations/001_initial_schema.sql)
 
-    return NextResponse.json(
+    const successResponse = NextResponse.json(
       {
         success: true,
         user: {
@@ -100,8 +105,15 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
+
+    // Copy cookies from response
+    response.cookies.getAll().forEach(({ name, value }) => {
+      successResponse.cookies.set(name, value);
+    });
+
+    return successResponse;
   } catch (error) {
-    console.error('[auth/signup] Error:', error);
+    console.error('[api:auth:signup] Error:', error);
     return NextResponse.json(
       { success: false, error: 'Signup failed' },
       { status: 500 }

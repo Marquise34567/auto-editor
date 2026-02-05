@@ -3,33 +3,73 @@
  * via a signed URL (no serverless function payload size limits)
  */
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024 // 2GB
+
 export async function uploadVideoToStorage(
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<{ storagePath: string; signedUrl: string }> {
+  // Step 0: Validate file before uploading
+  if (!file.type.startsWith('video/')) {
+    throw new Error(`Invalid file type: ${file.type}. Must be a video file.`)
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(
+      `File too large: ${(file.size / 1024 / 1024 / 1024).toFixed(2)}GB. Maximum is 2GB.`
+    )
+  }
+
+  console.log(`[storage-upload] Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`)
+
   // Step 1: Get the signed upload URL from the server
-  const uploadUrlResponse = await fetch("/api/upload-url", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
+  console.log(`[storage-upload] Requesting signed URL from /api/upload-url...`)
+  const uploadUrlResponse = await fetch('/api/upload-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       filename: file.name,
       contentType: file.type,
+      size: file.size,
     }),
-  });
+  })
 
   if (!uploadUrlResponse.ok) {
-    const errorData = await uploadUrlResponse.json();
-    throw new Error(
-      errorData.error ||
-        `Failed to get upload URL: ${uploadUrlResponse.statusText}`
-    );
+    let errorMessage = `Failed to get upload URL: ${uploadUrlResponse.statusText}`
+    try {
+      const errorData = await uploadUrlResponse.json()
+      console.error('[storage-upload] Error response:', errorData)
+      errorMessage = errorData.error
+      if (errorData.details) {
+        errorMessage += ` - ${errorData.details}`
+      }
+      if (errorData.missingEnv?.length > 0) {
+        errorMessage += ` [Missing env: ${errorData.missingEnv.join(', ')}]`
+      }
+      if (errorData.bucketExists === false) {
+        errorMessage += ` [Bucket does not exist]`
+      }
+    } catch (e) {
+      console.error('[storage-upload] Failed to parse error response:', e)
+    }
+    throw new Error(errorMessage)
   }
 
-  const { signedUrl, path } = (await uploadUrlResponse.json()) as {
-    signedUrl: string;
-    path: string;
-  };
+  let signedUrl: string
+  let path: string
+  try {
+    const data = (await uploadUrlResponse.json()) as {
+      signedUrl: string
+      path: string
+      tokenExpiresIn?: number
+    }
+    signedUrl = data.signedUrl
+    path = data.path
+    console.log(`[storage-upload] ✓ Got signed URL, expires in ${data.tokenExpiresIn}s`)
+  } catch (e) {
+    throw new Error(`Invalid response from /api/upload-url: ${e}`)
+  }
 
   // Step 2: Upload the file directly to Supabase Storage via signed URL
   // Use XMLHttpRequest or fetch with progress tracking

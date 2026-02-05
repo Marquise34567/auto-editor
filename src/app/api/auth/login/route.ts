@@ -3,13 +3,14 @@
  * POST /api/auth/login
  * 
  * Uses Supabase Auth to authenticate users
+ * Properly sets session cookies for subsequent requests
  */
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createApiRouteClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,24 +25,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create Supabase client
-    const supabase = await createClient();
+    // Create Supabase client with proper response cookie handling
+    const responseObj = NextResponse.json({ success: false })
+    const { supabase, response } = await createApiRouteClient(responseObj)
 
     // Sign in with Supabase
+    console.log('[api:auth:login] Signing in user:', email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error || !data.session) {
+      console.error('[api:auth:login] Auth error:', error?.message);
       return NextResponse.json(
-        { success: false, error: 'Invalid email or password' },
+        { success: false, error: error?.message || 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Return success - Supabase cookies are automatically set
-    return NextResponse.json(
+    console.log('[api:auth:login] Login successful, user:', data.user.id);
+
+    // Return success with user data - cookies are already set on response
+    const successResponse = NextResponse.json(
       {
         success: true,
         user: {
@@ -52,8 +58,15 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // Copy cookies from response to success response
+    response.cookies.getAll().forEach(({ name, value }) => {
+      successResponse.cookies.set(name, value);
+    });
+
+    return successResponse;
   } catch (error) {
-    console.error('[auth/login] Error:', error);
+    console.error('[api:auth:login] Error:', error);
     return NextResponse.json(
       { success: false, error: 'Authentication failed' },
       { status: 500 }

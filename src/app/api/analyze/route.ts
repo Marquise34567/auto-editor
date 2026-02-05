@@ -22,10 +22,15 @@ export async function POST(request: Request) {
   let originalFileName = "";
   let inputPath = "";
   let clipLengths: number[] = [15, 30, 45, 60];
+  const requestId = randomUUID();
   
   // OUTER TRY/CATCH: Guarantee we ALWAYS return JSON
   try {
-    console.log("=== Analyze route called ===");
+    const contentType = request.headers.get("content-type") ?? "";
+    const contentLength = request.headers.get("content-length") ?? "unknown";
+    console.log(
+      `[analyze:${requestId}] ${request.method} content-type=${contentType} content-length=${contentLength}`
+    );
     
     // AUTH & BILLING CHECK
     const supabase = await createClient();
@@ -56,24 +61,6 @@ export async function POST(request: Request) {
       );
     }
     
-    // DEBUG MODE: Echo request back without processing
-    const url = new URL(request.url);
-    if (url.searchParams.get("debug") === "1") {
-      console.log("[DEBUG MODE] Echoing request without processing");
-      const formData = await request.formData();
-      const file = formData.get("file") as File | null;
-      return NextResponse.json({
-        ok: true,
-        debug: true,
-        received: {
-          fileName: file?.name,
-          fileSize: file?.size,
-          fileType: file?.type,
-          clipLengths: formData.get("clipLengths"),
-        },
-      });
-    }
-    
     // PREFLIGHT CHECK: Verify FFmpeg/FFprobe are available
     try {
       const bins = checkBinaries();
@@ -91,15 +78,36 @@ export async function POST(request: Request) {
       );
     }
     
-    const contentType = request.headers.get("content-type") ?? "";
+    if (contentType.includes("multipart/form-data")) {
+      return NextResponse.json(
+        {
+          error: "Multipart uploads not supported. Upload to storage then send { videoPath } JSON.",
+        },
+        { status: 415 }
+      );
+    }
 
     if (contentType.includes("application/json")) {
-      const body = (await request.json()) as {
+      let body: {
         selftest?: boolean;
         path?: string;
         videoPath?: string;
         clipLengths?: number[] | string;
-      };
+      } | null = null;
+      try {
+        body = (await request.json()) as {
+          selftest?: boolean;
+          path?: string;
+          videoPath?: string;
+          clipLengths?: number[] | string;
+        };
+      } catch (error) {
+        console.error(`[analyze:${requestId}] Invalid JSON:`, error);
+        return NextResponse.json(
+          { error: "Invalid JSON body" },
+          { status: 400 }
+        );
+      }
 
       if (body?.selftest) {
         if (process.env.NODE_ENV !== "development") {
@@ -130,6 +138,13 @@ export async function POST(request: Request) {
         console.log("[selftest] Using inputPath:", inputPath);
       } else if (body?.videoPath) {
         // NEW: Handle direct storage upload flow
+        if (typeof body.videoPath !== "string" || !body.videoPath.trim()) {
+          return NextResponse.json(
+            { error: "Missing videoPath", details: "videoPath must be a non-empty string" },
+            { status: 400 }
+          );
+        }
+
         console.log("[storage] Downloading video from storage path:", body.videoPath);
 
         if (Array.isArray(body.clipLengths)) {
@@ -185,60 +200,13 @@ export async function POST(request: Request) {
         );
       }
     } else {
-      // Parse and validate request
-      let formData: FormData;
-      try {
-        formData = await request.formData();
-      } catch (parseError) {
-        console.error("[error] Failed to parse FormData:", parseError);
-        return NextResponse.json(
-          {
-            error: "Invalid request format",
-            details: parseError instanceof Error ? parseError.message : "Could not parse FormData",
-          },
-          { status: 400 }
-        );
-      }
-
-      const file = formData.get("file") as File | null;
-
-      console.log("[request] File received:", file?.name, "Size:", file?.size);
-      console.log("[request] clipLengths:", formData.get("clipLengths"));
-
-      if (!file) {
-        console.error("[validation] No file in request");
-        return NextResponse.json(
-          {
-            error: "Missing video file",
-            details: "The 'file' field is required in the FormData",
-          },
-          { status: 400 }
-        );
-      }
-
-      const clipLengthRaw = formData.get("clipLengths")?.toString();
-      clipLengths = clipLengthRaw
-        ? clipLengthRaw.split(",").map((value) => Number(value.trim()))
-        : [15, 30, 45, 60];
-
-      const buffer = Buffer.from(await file.arrayBuffer());
-      jobId = randomUUID();
-      originalFileName = file.name;
-      console.log("[analyze] Created jobId:", jobId);
-      console.log("[analyze] Original filename:", file.name);
-      console.log("[analyze] File size:", buffer.length, "bytes");
-
-      // STEP 1: FORCE ABSOLUTE PATH
-      const uploadDir = path.resolve(process.cwd(), "tmp", "uploads");
-      await fs.mkdir(uploadDir, { recursive: true });
-
-      const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, "_");
-      inputPath = path.resolve(uploadDir, `${jobId}-${safeName}`);
-
-      console.log("[analyze] Resolved absolute inputPath:", inputPath);
-      console.log("[analyze] Writing file to disk...");
-
-      await fs.writeFile(inputPath, buffer);
+      return NextResponse.json(
+        {
+          error: "Unsupported content type",
+          details: "Send application/json with { videoPath }",
+        },
+        { status: 415 }
+      );
     }
 
     if (!jobId) {

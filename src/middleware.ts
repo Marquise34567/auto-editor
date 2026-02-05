@@ -33,9 +33,12 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          // Update request cookies for this middleware flow
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
+          // Crucially: Set cookies on response for browser to receive updated auth cookies
+          // (e.g., refreshed session tokens)
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           )
