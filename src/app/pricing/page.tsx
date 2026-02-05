@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PLANS, getAnnualDiscount, formatPrice, getMonthlyEquivalent, type PlanId } from '@/config/plans';
 import { Logo } from '@/components/Logo';
+import { BetaBadge } from '@/components/BetaBadge';
 import { UserNav } from '@/components/UserNav';
 import { createCheckoutUrl, storeReturnTo, getCurrentPath } from '@/lib/client/returnTo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -153,9 +154,10 @@ function PricingPageContent() {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-6 lg:px-16">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
           <Logo />
           <span className="text-lg font-semibold tracking-tight">AutoEditor</span>
+          <BetaBadge />
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-white/70 lg:flex">
           <UserNav />
