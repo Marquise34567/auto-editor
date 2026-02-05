@@ -16,15 +16,17 @@ export async function POST(request: NextRequest) {
     // Require authentication
     const user = await requireUserServer()
 
-    if (!user) {
+    if (!user || !user.email) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - Please log in' },
         { status: 401 }
       )
     }
 
     const body = await request.json()
     const { plan } = body
+
+    console.log('[stripe/checkout] Creating session for user:', user.id, 'plan:', plan)
 
     // Validate plan
     const validPlans = ['starter', 'creator', 'studio']
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get price ID from env vars
+    // Get price ID from env vars (server-side, NOT NEXT_PUBLIC)
     const priceMap: Record<string, string> = {
       starter: process.env.STRIPE_PRICE_STARTER || '',
       creator: process.env.STRIPE_PRICE_CREATOR || '',
@@ -44,11 +46,14 @@ export async function POST(request: NextRequest) {
 
     const priceId = priceMap[plan]
     if (!priceId) {
+      console.error(`[stripe/checkout] Missing STRIPE_PRICE_${plan.toUpperCase()} env var`);
       return NextResponse.json(
-        { error: `Price not configured for ${plan}` },
+        { error: `Stripe price not configured for ${plan} plan` },
         { status: 500 }
       )
     }
+
+    console.log('[stripe/checkout] Using Stripe price:', priceId)
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({

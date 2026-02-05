@@ -7,7 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabaseServer';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
@@ -50,20 +50,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Supabase client
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createClient();
+
+    // Get redirect URL from request origin or fallback
+    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const redirectUrl = `${origin}/auth/callback?next=/editor`;
+
+    // Debug log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[signup] Using Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log('[signup] Redirect URL:', redirectUrl);
+    }
 
     // Sign up with Supabase
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/editor`,
+        emailRedirectTo: redirectUrl,
       },
     });
 
     if (error) {
+      console.error('[signup] Supabase error:', error);
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: error.message || 'Signup failed' },
         { status: 400 }
       );
     }
@@ -75,18 +86,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create profile
-    await supabase.from('profiles').insert({
-      id: data.user.id,
-      email: data.user.email,
-    });
-
-    // Create subscription
-    await supabase.from('subscriptions').insert({
-      user_id: data.user.id,
-      status: 'inactive',
-      plan: 'starter',
-    });
+    // Note: profiles and billing_status are created by the database trigger
+    // (see supabase/migrations/001_initial_schema.sql)
 
     return NextResponse.json(
       {

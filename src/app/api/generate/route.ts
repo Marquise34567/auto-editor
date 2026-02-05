@@ -10,6 +10,7 @@ import type { EDL } from "@/lib/edl/types";
 import { getPlan } from "@/config/plans";
 import { getUserSubscription, getDemoUserId, incrementRenderUsage, getUserEntitlements } from "@/lib/server/subscription";
 import { getVideoMetadata } from "@/lib/server/ffprobe";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,34 @@ function decrementActiveRenders(userId: string) {
 
 export async function POST(request: Request) {
   try {
+    // AUTH & BILLING CHECK
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    
+    // Check billing status
+    const { data: billingData } = await supabase
+      .from('billing_status')
+      .select('plan, status')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!billingData || billingData.status !== 'active' || billingData.plan === 'free') {
+      return NextResponse.json(
+        { 
+          error: "This feature requires an active Creator or Studio subscription",
+          upgrade_url: "/pricing"
+        },
+        { status: 402 }
+      );
+    }
+    
     // PREFLIGHT CHECK: Verify FFmpeg is available
     try {
       const bins = checkBinaries();

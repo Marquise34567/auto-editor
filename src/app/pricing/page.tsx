@@ -55,31 +55,15 @@ function PricingPageContent() {
 
     try {
       setError(null);
-      const currentPath = getCurrentPath();
       
-      // Map planId + billingPeriod to Stripe Price ID
-      const priceIdMap: Record<string, string> = {
-        'starter': process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || '',
-        'creator': process.env.NEXT_PUBLIC_STRIPE_PRICE_CREATOR || '',
-        'studio': process.env.NEXT_PUBLIC_STRIPE_PRICE_STUDIO || '',
-      };
+      console.log('[PricingPage] Creating checkout session:', { plan: planId });
 
-      const priceId = priceIdMap[planId];
-      
-      if (!priceId) {
-        throw new Error(`No Stripe Price ID configured for plan: ${planId}`);
-      }
-
-      console.log('[PricingPage] Creating checkout session:', { planId, priceId, returnTo: currentPath });
-
-      // Call backend checkout endpoint
-      const response = await fetch('/api/billing/checkout', {
+      // Call new Stripe checkout endpoint
+      const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId,
-          returnTo: currentPath,
-        }),
+        body: JSON.stringify({ plan: planId }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -94,9 +78,6 @@ function PricingPageContent() {
       }
 
       console.log('[PricingPage] Redirecting to Stripe:', url);
-      
-      // Store returnTo in localStorage as backup
-      storeReturnTo(currentPath);
 
       // Redirect to Stripe Checkout
       window.location.href = url;

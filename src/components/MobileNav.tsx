@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Logo } from './Logo';
 import { BetaBadge } from './BetaBadge';
@@ -14,6 +14,18 @@ import { BetaBadge } from './BetaBadge';
 export function MobileNav({ children }: { children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
     <>
       {/* Desktop Navigation - Hidden on mobile */}
@@ -24,7 +36,7 @@ export function MobileNav({ children }: { children?: React.ReactNode }) {
       {/* Mobile Menu Button - Visible on mobile only */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden flex flex-col gap-1.5 w-6 h-6 justify-center"
+        className="lg:hidden flex flex-col gap-1.5 w-6 h-6 justify-center relative z-9999"
         aria-label="Toggle menu"
       >
         <span className={`w-full h-0.5 bg-white transition-all ${isOpen ? 'rotate-45 translate-y-2' : ''}`} />
@@ -32,61 +44,43 @@ export function MobileNav({ children }: { children?: React.ReactNode }) {
         <span className={`w-full h-0.5 bg-white transition-all ${isOpen ? '-rotate-45 -translate-y-2' : ''}`} />
       </button>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Panel */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Mobile Menu Drawer */}
-      <div
-        className={`fixed top-0 right-0 h-full w-64 bg-[#0a0c12] border-l border-white/10 z-50 transition-transform duration-300 lg:hidden ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <div className="flex flex-col p-6 gap-6">
-          {/* Close button */}
+        <div className="fixed inset-0 z-9999 lg:hidden">
+          {/* Backdrop */}
           <button
-            onClick={() => setIsOpen(false)}
-            className="self-end text-white/70 hover:text-white"
             aria-label="Close menu"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            onClick={() => setIsOpen(false)}
+            className="absolute inset-0 bg-black/60"
+          />
 
-          {/* Navigation Links */}
-          <div className="flex flex-col gap-4">
-            <a
-              href="#features"
-              className="text-white/70 hover:text-white transition text-base py-2"
+          {/* Panel */}
+          <div className="absolute right-0 top-0 h-full w-[80%] max-w-xs bg-[#0b0f1a] border-l border-white/10 p-6">
+            <button
+              aria-label="Close menu"
               onClick={() => setIsOpen(false)}
+              className="absolute right-4 top-4 text-white/80 hover:text-white"
             >
-              Features
-            </a>
-            <a
-              href="#pricing"
-              className="text-white/70 hover:text-white transition text-base py-2"
-              onClick={() => setIsOpen(false)}
-            >
-              Pricing
-            </a>
-            <a
-              href="#faq"
-              className="text-white/70 hover:text-white transition text-base py-2"
-              onClick={() => setIsOpen(false)}
-            >
-              FAQ
-            </a>
-            <div className="border-t border-white/10 pt-4 mt-2">
-              {children}
-            </div>
+              ✕
+            </button>
+
+            <nav className="mt-14 space-y-8 text-white/80 text-xl">
+              <a href="#features" onClick={() => setIsOpen(false)} className="block hover:text-white">
+                Features
+              </a>
+              <a href="#pricing" onClick={() => setIsOpen(false)} className="block hover:text-white">
+                Pricing
+              </a>
+              <a href="#faq" onClick={() => setIsOpen(false)} className="block hover:text-white">
+                FAQ
+              </a>
+              <div className="border-t border-white/10 pt-8 mt-8">
+                {children}
+              </div>
+            </nav>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

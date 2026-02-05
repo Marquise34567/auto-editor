@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 import { MobileNav } from '@/components/MobileNav';
 import { UserNav } from '@/components/UserNav';
+import { createClient } from '@/lib/supabase/client';
 
 type FormMode = 'login' | 'signup';
 
@@ -21,31 +22,40 @@ function AuthPageContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Initialize Supabase client
+  const supabase = createClient();
 
   // Check session on mount
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user) {
-            setIsLoggedIn(true);
-          }
+        console.log('[login] Checking existing session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[login] Session check error:', error);
+        } else if (session) {
+          console.log('[login] Active session found:', session.user.email);
+          setIsLoggedIn(true);
+        } else {
+          console.log('[login] No active session');
         }
       } catch (err) {
-        console.error('Failed to check session:', err);
+        console.error('[login] Failed to check session:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkSession();
-  }, []);
+  }, [supabase]);
 
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && isLoggedIn) {
+      console.log('[login] User logged in, redirecting to /editor');
       router.push('/editor');
     }
   }, [isLoggedIn, isLoading, router]);
@@ -64,10 +74,13 @@ function AuthPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setIsSubmitting(true);
 
     try {
       if (mode === 'login') {
+        console.log('[login] Starting login for:', email);
+        
         // Validate login form
         if (!email || !password) {
           setError('Email and password required');
@@ -75,23 +88,30 @@ function AuthPageContent() {
           return;
         }
 
-        // Call login API directly
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+        // Sign in with Supabase directly
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
         });
 
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || 'Login failed');
+        if (error) {
+          console.error('[login] Login error:', error);
+          setError(error.message || 'Invalid email or password');
           setIsSubmitting(false);
           return;
         }
 
-        // Redirect on success
-        window.location.href = '/editor';
+        if (data.session) {
+          console.log('[login] Login successful:', data.user.email);
+          // Redirect to pricing page (user will select a plan)
+          router.push('/pricing');
+        } else {
+          setError('Login failed - no session created');
+          setIsSubmitting(false);
+        }
       } else {
+        console.log('[signup] Starting signup for:', email);
+        
         // Validate signup form
         if (!email || !password || !confirmPassword) {
           setError('All fields required');
@@ -111,24 +131,48 @@ function AuthPageContent() {
           return;
         }
 
-        // Call signup API directly
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, confirmPassword }),
+        // Sign up with Supabase directly
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/pricing`,
+          },
         });
 
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || 'Signup failed');
+        if (error) {
+          console.error('[signup] Signup error:', error);
+          setError(error.message || 'Signup failed');
           setIsSubmitting(false);
           return;
         }
 
-        // Redirect on success
-        window.location.href = '/editor';
+        if (data.user) {
+          console.log('[signup] Signup successful:', data.user.email);
+          
+          // Check if email confirmation is required
+          if (data.user.identities && data.user.identities.length === 0) {
+            // Email already exists
+            setError('An account with this email already exists');
+            setIsSubmitting(false);
+          } else if (data.session) {
+            // Email confirmation is OFF - user is logged in immediately
+            console.log('[signup] Email confirmation disabled, redirecting to /pricing');
+            setSuccessMessage('Account created successfully! Redirecting...');
+            setTimeout(() => router.push('/pricing'), 1500);
+          } else {
+            // Email confirmation is ON - user needs to check email
+            console.log('[signup] Email confirmation required');
+            setSuccessMessage('Account created! Please check your email to verify your account.');
+            setIsSubmitting(false);
+          }
+        } else {
+          setError('Signup failed - no user created');
+          setIsSubmitting(false);
+        }
       }
     } catch (err) {
+      console.error('[auth] Unexpected error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsSubmitting(false);
     }
@@ -168,6 +212,13 @@ function AuthPageContent() {
                   : 'Create an account to turn videos into amazing clips'}
               </p>
             </div>
+
+            {/* Success Message */}
+            {successMessage && (
+              <div className="mb-4 sm:mb-6 rounded-lg border border-green-500/50 bg-green-500/10 p-3 sm:p-4 text-xs sm:text-sm text-green-300">
+                {successMessage}
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -250,6 +301,7 @@ function AuthPageContent() {
                     onClick={() => {
                       setMode('signup');
                       setError('');
+                      setSuccessMessage('');
                       setEmail('');
                       setPassword('');
                       setConfirmPassword('');
@@ -266,6 +318,7 @@ function AuthPageContent() {
                     onClick={() => {
                       setMode('login');
                       setError('');
+                      setSuccessMessage('');
                       setEmail('');
                       setPassword('');
                       setConfirmPassword('');

@@ -109,21 +109,23 @@ export async function getUserSubscription(userId: string): Promise<UserSubscript
     const dbSub = await dbGetUserSubscription(userId);
     
     if (!dbSub) {
+      // Return default free subscription
       return getDefaultSubscription(userId);
     }
 
-    const subscription = dbSubscriptionToUserSubscription(dbSub);
-    
-    // Get current month's render usage
     const monthKey = getCurrentMonthKey();
-    subscription.rendersUsedThisPeriod = await getRendersUsedThisMonth(userId, monthKey);
+    const rendersUsed = await getRendersUsedThisMonth(userId, monthKey);
 
+    const subscription = dbSubscriptionToUserSubscription(dbSub);
+    subscription.rendersUsedThisPeriod = rendersUsed;
+    
     return subscription;
   } catch (error) {
-    console.error("[subscription] Error loading subscription:", error);
+    console.error("[getUserSubscription] Failed:", error);
     return getDefaultSubscription(userId);
   }
 }
+
 
 /**
  * Update user subscription.

@@ -12,6 +12,7 @@ import { buildEDL, validateEDL } from "@/lib/edl/builder";
 import { createJob, updateJob, appendJobLog } from "@/lib/server/jobStore";
 import { checkBinaries } from "@/lib/ffmpeg/resolve";
 import { runBin } from "@/lib/runBin";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,35 @@ export async function POST(request: Request) {
   // OUTER TRY/CATCH: Guarantee we ALWAYS return JSON
   try {
     console.log("=== Analyze route called ===");
+    
+    // AUTH & BILLING CHECK
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { ok: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    
+    // Check billing status
+    const { data: billingData } = await supabase
+      .from('billing_status')
+      .select('plan, status')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!billingData || billingData.status !== 'active' || billingData.plan === 'free') {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: "This feature requires an active Creator or Studio subscription",
+          upgrade_url: "/pricing"
+        },
+        { status: 402 }
+      );
+    }
     
     // DEBUG MODE: Echo request back without processing
     const url = new URL(request.url);

@@ -75,17 +75,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ email, password, confirmPassword }),
         });
 
-        const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || 'Signup failed');
+          const data = await res.json().catch(() => ({ error: 'Network error' }));
+          throw new Error(data.error || `Signup failed: ${res.status} ${res.statusText}`);
         }
 
+        const data = await res.json();
         setUser(data.user);
         // Redirect to editor
         window.location.href = '/editor';
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Signup failed';
+        const message = err instanceof Error ? err.message : 'Signup failed: Unknown error';
         setError(message);
+        console.error('[useAuth] Signup error:', err);
         throw err;
       }
     },
