@@ -10,12 +10,13 @@ export const dynamic = 'force-dynamic';
  * Handles redirect after successful Stripe checkout
  * 
  * Query params:
- *   - session_id: Stripe Checkout Session ID
- *   - returnTo: URL to redirect user after processing (optional)
+ *   - session_id: Stripe Checkout Session ID (required)
+ *   - returnTo: URL to redirect user after processing (optional, defaults to /editor)
  * 
  * Behavior:
- *   - If WEBHOOKS_LIVE=false: Mark subscription as pending, redirect with ?pending=1
- *   - If WEBHOOKS_LIVE=true: Activate subscription immediately
+ *   - Validates Stripe webhook and retrieves subscription
+ *   - Activates subscription immediately in Supabase
+ *   - Redirects to returnTo URL
  */
 export async function GET(request: NextRequest) {
   try {
@@ -54,30 +55,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/pricing?error=invalid_session', request.url));
     }
 
-    const webhooksLive = process.env.BILLING_WEBHOOKS_LIVE === 'true';
-    console.log('[billing/success] Webhooks live:', webhooksLive);
-
-    if (!webhooksLive) {
-      // Webhooks NOT enabled - store pending verification state
-      console.log('[billing/success] Storing pending activation for user:', userId);
-      
-      await updateUserSubscription(userId, {
-        planId: 'free', // Keep on FREE until webhooks activate
-        status: 'pending_activation',
-        provider: 'stripe',
-        providerCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
-        providerSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
-      });
-
-      // Redirect with pending flag
-      const redirectUrl = new URL(returnTo, request.url);
-      redirectUrl.searchParams.set('pending', '1');
-      console.log('[billing/success] Redirecting to:', redirectUrl.pathname + redirectUrl.search);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // Webhooks ARE enabled - activate subscription immediately
-    console.log('[billing/success] Activating subscription immediately for user:', userId);
+    // Activate subscription immediately (webhooks handle async confirmations)
+    console.log('[billing/success] Processing subscription for user:', userId);
     
     const subscription = typeof session.subscription === 'string'
       ? await stripe.subscriptions.retrieve(session.subscription)

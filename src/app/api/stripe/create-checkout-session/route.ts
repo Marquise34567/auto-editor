@@ -3,51 +3,30 @@
  * POST /api/stripe/create-checkout-session
  * 
  * Creates a Stripe Checkout Session for subscription purchase
- * Requires authenticated user
- * Supports soft billing mode for testing
+ * Requires authenticated user and valid Stripe configuration
+ * Uses real production-mode Stripe API
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getBillingConfig, isBillingEnabled, getPlanPriceId, getPlanMetadata } from '@/lib/billing/config';
+import { getPlanPriceId, getPlanMetadata } from '@/lib/billing/config';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
-import { isBillingLive } from '@/lib/server/subscription';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if billing is live (CRITICAL SAFETY CHECK)
-    if (!isBillingLive()) {
-      return NextResponse.json(
-        { 
-          error: 'Billing is not active yet. Set BILLING_LIVE=true to enable live billing.',
-          code: 'BILLING_NOT_LIVE'
-        },
-        { status: 403 }
-      );
-    }
-
-    // Validate Stripe configuration
+    // Validate Stripe configuration - REQUIRED
     if (!isStripeConfigured()) {
+      console.error('[checkout] Stripe is not configured. Set STRIPE_SECRET_KEY.');
       return NextResponse.json(
-        { error: 'Stripe is not configured on the server' },
+        { error: 'Stripe is not configured. Contact support.' },
         { status: 500 }
       );
     }
 
     const stripe = getStripe();
-
-    const billingConfig = getBillingConfig();
-
-    // Check if billing is enabled
-    if (!isBillingEnabled()) {
-      return NextResponse.json(
-        { error: 'Billing is currently disabled. Set BILLING_MODE=soft or live.' },
-        { status: 403 }
-      );
-    }
 
     // Verify authentication
     const supabase = await createClient();
@@ -97,7 +76,6 @@ export async function POST(request: NextRequest) {
       email: user.email,
       plan: planLower,
       priceId,
-      mode: billingConfig.mode,
     });
 
     // Get or create Stripe customer
@@ -163,7 +141,6 @@ export async function POST(request: NextRequest) {
     console.log('[checkout] Session created:', {
       sessionId: session.id,
       url: session.url,
-      mode: billingConfig.mode,
     });
 
     return NextResponse.json({
