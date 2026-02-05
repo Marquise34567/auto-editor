@@ -13,6 +13,7 @@ import { createJob, updateJob, appendJobLog } from "@/lib/server/jobStore";
 import { checkBinaries } from "@/lib/ffmpeg/resolve";
 import { runBin } from "@/lib/runBin";
 import { createClient } from "@/lib/supabase/server";
+import { getSignedDownloadUrl } from "@/lib/supabase/storage";
 
 export const runtime = "nodejs";
 
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
       const body = (await request.json()) as {
         selftest?: boolean;
         path?: string;
+        videoPath?: string;
         clipLengths?: number[] | string;
       };
 
@@ -126,9 +128,59 @@ export async function POST(request: Request) {
         }
 
         console.log("[selftest] Using inputPath:", inputPath);
+      } else if (body?.videoPath) {
+        // NEW: Handle direct storage upload flow
+        console.log("[storage] Downloading video from storage path:", body.videoPath);
+
+        if (Array.isArray(body.clipLengths)) {
+          clipLengths = body.clipLengths.map((value) => Number(value));
+        } else if (typeof body.clipLengths === "string") {
+          clipLengths = body.clipLengths
+            .split(",")
+            .map((value) => Number(value.trim()));
+        }
+
+        try {
+          // Get signed download URL
+          const signedUrl = await getSignedDownloadUrl(body.videoPath);
+          console.log("[storage] Got signed download URL");
+
+          // Download the file from storage
+          const response = await fetch(signedUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to download video: HTTP ${response.status}`);
+          }
+
+          const arraybuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arraybuffer);
+          jobId = randomUUID();
+          originalFileName = path.basename(body.videoPath);
+          console.log("[storage] Downloaded video, size:", buffer.length, "bytes");
+          console.log("[storage] Created jobId:", jobId);
+
+          // Write to temp directory
+          const uploadDir = path.resolve(process.cwd(), "tmp", "uploads");
+          await fs.mkdir(uploadDir, { recursive: true });
+
+          const safeName = originalFileName.replace(/[^a-z0-9.\-_]/gi, "_");
+          inputPath = path.resolve(uploadDir, `${jobId}-${safeName}`);
+          console.log("[storage] Writing to inputPath:", inputPath);
+
+          await fs.writeFile(inputPath, buffer);
+          console.log("[storage] File written successfully");
+        } catch (error) {
+          console.error("[storage] Error downloading/processing video:", error);
+          return NextResponse.json(
+            {
+              error: "Failed to download video",
+              details: error instanceof Error ? error.message : "Unknown error",
+            },
+            { status: 500 }
+          );
+        }
       } else {
         return NextResponse.json(
-          { error: "Invalid request", details: "Expected selftest JSON payload" },
+          { error: "Invalid request", details: "Expected JSON with videoPath or selftest mode" },
           { status: 400 }
         );
       }

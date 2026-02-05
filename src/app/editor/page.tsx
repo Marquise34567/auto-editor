@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PendingSubscriptionBanner } from "@/components/PendingSubscriptionBanner";
@@ -17,6 +17,8 @@ import {
 } from "@/lib/types";
 import { getPlan } from "@/config/plans";
 import type { PlanId } from "@/config/plans";
+import { trackPostHogEvent, trackPlausibleEvent } from "@/lib/analytics/client";
+import { uploadVideoToStorage } from "@/lib/client/storage-upload";
 
 type BillingStatus = {
   planId: PlanId;
@@ -117,6 +119,9 @@ export default function EditorPage() {
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const uploadTrackedRef = useRef(false);
+  const generateTrackedRef = useRef(false);
+  const clipGeneratedTrackedRef = useRef(false);
   const [settings, setSettings] = useState<GenerateSettings>({
     clipLengths: [30, 45],
     numClips: 3,
@@ -202,6 +207,9 @@ export default function EditorPage() {
       setShowErrorDetails(false);
       setJobId(null);
       setAnalyzing(false);
+      uploadTrackedRef.current = false;
+      generateTrackedRef.current = false;
+      clipGeneratedTrackedRef.current = false;
       return;
     }
     const url = URL.createObjectURL(file);
@@ -273,6 +281,11 @@ export default function EditorPage() {
         if (data.status === "DONE" && (data.outputUrl || data.finalUrl)) {
           setGenerationDone(true);
           setAnalyzing(false);
+          if (!clipGeneratedTrackedRef.current) {
+            trackPostHogEvent("clip_generated");
+            trackPlausibleEvent("GenerateClip");
+            clipGeneratedTrackedRef.current = true;
+          }
         }
         if (data.status === "FAILED") {
           setAnalyzing(false);
@@ -296,6 +309,10 @@ export default function EditorPage() {
     const triggerGenerate = async () => {
       try {
         console.log("[editor] Triggering generate for jobId:", jobId);
+        if (!generateTrackedRef.current) {
+          trackPostHogEvent("clip_generation_started");
+          generateTrackedRef.current = true;
+        }
         const response = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -424,19 +441,53 @@ export default function EditorPage() {
     setEtaStart(Date.now());
     setAnalyzeEta(18);
     setGenerateEta(null);
+    uploadTrackedRef.current = false;
+    generateTrackedRef.current = false;
+    clipGeneratedTrackedRef.current = false;
 
     try {
-      const formData = new FormData();
-      formData.append("file", fileToAnalyze);
-      formData.append("clipLengths", nextSettings.clipLengths.join(","));
+      if (!uploadTrackedRef.current) {
+        trackPostHogEvent("upload_started", { sizeBytes: fileToAnalyze.size });
+        trackPlausibleEvent("UploadVideo");
+        uploadTrackedRef.current = true;
+      }
 
-      console.log("=== Auto-Analyze Request ===");
+      // Step 1: Upload video to Supabase Storage
+      console.log("=== Starting Video Upload to Storage ===");
       console.log("File:", fileToAnalyze.name, "Size:", fileToAnalyze.size);
+
+      let videoPath: string;
+      try {
+        const uploadResult = await uploadVideoToStorage(fileToAnalyze, (percent) => {
+          console.log(`Upload progress: ${percent}%`);
+        });
+        videoPath = uploadResult.storagePath;
+        console.log("Upload successful, path:", videoPath);
+      } catch (uploadError) {
+        const errorMessage = uploadError instanceof Error 
+          ? uploadError.message 
+          : "Failed to upload video to storage";
+        setError(errorMessage);
+        setErrorDetails(JSON.stringify({ uploadError }, null, 2));
+        setAnalyzing(false);
+        return;
+      }
+
+      // Step 2: Send video path to analyze endpoint
+      console.log("=== Starting Analysis ===");
       console.log("Clip lengths:", nextSettings.clipLengths.join(","));
+
+      const analyzePayload = {
+        videoPath,
+        clipLengths: nextSettings.clipLengths.join(","),
+      };
 
       const response = await fetch("/api/analyze", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(analyzePayload),
       });
 
       if (!response.ok) {
@@ -466,6 +517,7 @@ export default function EditorPage() {
 
       const data = (await response.json()) as AnalyzeResult;
       console.log("Analyze success, jobId:", data.jobId);
+      trackPostHogEvent("upload_completed");
       setJobId(data.jobId);
       setCandidates(data.candidates);
       setProgressStep(2);
