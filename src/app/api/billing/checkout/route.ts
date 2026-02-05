@@ -1,111 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateReturnTo } from '@/lib/client/returnTo';
-import type { PlanId } from '@/config/plans';
-import { isBillingLive } from '@/lib/server/subscription';
+import { stripe } from '@/lib/stripe';
+import { STRIPE_PRICE_LOOKUP_KEYS, type PlanId } from '@/lib/plans';
+import { getDemoUserId } from '@/lib/server/subscription';
 
 export const runtime = 'nodejs';
 
-/**
- * POST /api/billing/checkout
- *
- * Creates a Stripe Checkout Session.
- * 
- * Request:
- * {
- *   planId: "starter" | "creator" | "studio"
- *   billingCycle: "monthly" | "annual"
- *   returnTo: "/editor" (internal path, validated)
- * }
- *
- * Response:
- * {
- *   ok: true,
- *   url: "https://checkout.stripe.com/pay/..." (Stripe checkout URL)
- * }
- */
 export async function POST(request: NextRequest) {
   try {
-    // CRITICAL SAFETY: Block checkout if billing is not live
-    if (!isBillingLive()) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "BILLING_DISABLED",
-          error: "Billing is not active yet. No charges will be made.",
-        },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
-    const { planId, billingCycle, returnTo } = body;
+    const { plan, returnTo } = body as { plan: PlanId; returnTo?: string };
 
-    // Validate inputs
-    if (!planId || !billingCycle || !['starter', 'creator', 'studio'].includes(planId)) {
+    if (plan === 'free') {
       return NextResponse.json(
-        { ok: false, error: 'Invalid plan ID' },
+        { error: 'Free plan does not require checkout' },
         { status: 400 }
       );
     }
 
-    if (!['monthly', 'annual'].includes(billingCycle)) {
+    if (!['starter', 'creator', 'studio'].includes(plan)) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid billing cycle' },
+        { error: 'Invalid plan' },
         { status: 400 }
       );
     }
 
-    // Validate and sanitize returnTo
-    const validatedReturnTo = validateReturnTo(returnTo);
+    const userId = getDemoUserId();
+    const lookupKey = STRIPE_PRICE_LOOKUP_KEYS[plan as Exclude<PlanId, 'free'>];
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000';
 
-    // TODO: Integrate with Stripe
-    // For now, return a placeholder that would normally be the Stripe URL
-    console.log('[checkout] Creating session:', {
-      planId,
-      billingCycle,
-      returnTo: validatedReturnTo,
+    // Look up price by lookup key
+    const prices = await stripe.prices.list({
+      lookup_keys: [lookupKey],
+      expand: ['data.product'],
     });
 
-    // Placeholder: In production, this would call Stripe API
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    // const session = await stripe.checkout.sessions.create({
-    //   payment_method_types: ['card'],
-    //   mode: 'subscription',
-    //   customer_email: user.email,
-    //   line_items: [
-    //     {
-    //       price: PLAN_PRICE_IDS[planId][billingCycle], // e.g., "price_1234_monthly"
-    //       quantity: 1,
-    //     },
-    //   ],
-    //   success_url: `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}&returnTo=${encodeURIComponent(validatedReturnTo)}`,
-    //   cancel_url: `${baseUrl}/checkout?plan=${planId}&billingCycle=${billingCycle}&returnTo=${encodeURIComponent(validatedReturnTo)}`,
-    //   metadata: {
-    //     userId: user.id,
-    //     planId,
-    //     billingCycle,
-    //     returnTo: validatedReturnTo,
-    //   },
-    //   client_reference_id: user.id,
-    // });
+    if (!prices.data.length) {
+      console.error(`[checkout] Price not found for lookup key: ${lookupKey}`);
+      return NextResponse.json(
+        { error: `Price not found for plan: ${plan}` },
+        { status: 500 }
+      );
+    }
 
-    // For demo, return a mock URL
-    const mockUrl = `https://checkout.stripe.com/mock?planId=${planId}&cycle=${billingCycle}`;
+    const price = prices.data[0];
 
-    return NextResponse.json(
-      {
-        ok: true,
-        url: mockUrl,
-        message: 'Stripe integration pending. See server logs.',
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: price.id,
+          quantity: 1,
+        },
+      ],
+      success_url: `${appUrl}/api/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/pricing?canceled=1`,
+      metadata: {
+        userId,
+        plan,
+        returnTo: returnTo || '/editor',
       },
-      { status: 200 }
-    );
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error('[checkout] Error:', errorMsg);
+      client_reference_id: userId,
+    });
 
+    return NextResponse.json({ url: session.url });
+  } catch (error) {
+    console.error('[checkout] Error:', error);
     return NextResponse.json(
-      { ok: false, error: 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     );
   }
