@@ -44,14 +44,63 @@ function PricingPageContent() {
     }
   }, []);
 
-  const handleUpgrade = (planId: string) => {
+  const handleUpgrade = async (planId: string) => {
+    // Skip checkout for free plan
+    if (planId === 'free') {
+      router.push('/editor');
+      return;
+    }
+
     try {
+      setError(null);
       const currentPath = getCurrentPath();
+      
+      // Map planId + billingPeriod to Stripe Price ID
+      const priceIdMap: Record<string, string> = {
+        'starter': process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || '',
+        'creator': process.env.NEXT_PUBLIC_STRIPE_PRICE_CREATOR || '',
+        'studio': process.env.NEXT_PUBLIC_STRIPE_PRICE_STUDIO || '',
+      };
+
+      const priceId = priceIdMap[planId];
+      
+      if (!priceId) {
+        throw new Error(`No Stripe Price ID configured for plan: ${planId}`);
+      }
+
+      console.log('[PricingPage] Creating checkout session:', { planId, priceId, returnTo: currentPath });
+
+      // Call backend checkout endpoint
+      const response = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId,
+          returnTo: currentPath,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      if (!url) {
+        throw new Error('No checkout URL returned');
+      }
+
+      console.log('[PricingPage] Redirecting to Stripe:', url);
+      
+      // Store returnTo in localStorage as backup
       storeReturnTo(currentPath);
-      const checkoutUrl = createCheckoutUrl(planId, billingPeriod, currentPath);
-      router.push(checkoutUrl);
+
+      // Redirect to Stripe Checkout
+      window.location.href = url;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[PricingPage] Checkout error:', err);
       setError(`Failed to process checkout: ${msg}`);
     }
   };

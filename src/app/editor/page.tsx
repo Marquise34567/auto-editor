@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PendingSubscriptionBanner } from "@/components/PendingSubscriptionBanner";
 import EditorControls from "@/components/editor/EditorControls";
 import ProgressStepper from "@/components/editor/ProgressStepper";
 import PreviewCard from "@/components/editor/PreviewCard";
@@ -489,8 +490,11 @@ export default function EditorPage() {
 
   return (
     <ProtectedRoute>
+      {/* Pending Subscription Banner (shows if payment made but webhooks not live) */}
+      <PendingSubscriptionBanner />
+      
       <div className="min-h-screen bg-[#07090f] px-6 py-10 text-white lg:px-16">
-      <div className="mx-auto max-w-6xl space-y-8">
+      <div className="mx-auto max-w-6xl space-y-8">{/* Existing content below */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold">Auto-Editor</h1>

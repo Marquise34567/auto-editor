@@ -58,7 +58,13 @@ export async function GET(request: Request) {
 
     // Human-readable message
     let message = "";
-    if (!isBillingLive()) {
+    let isPending = false;
+    
+    // Check for pending verification (payment made but webhooks not activating)
+    if (subscription.status === 'incomplete' && subscription.providerSubscriptionId) {
+      isPending = true;
+      message = "Payment received — activation pending (webhook verification required)";
+    } else if (!isBillingLive()) {
       message = "Free plan only (billing not active yet)";
     } else if (entitlements.rendersPerMonth >= 999999) {
       message = `${plan.name} plan: Unlimited renders`;
@@ -70,6 +76,7 @@ export async function GET(request: Request) {
       ok: true,
       userId,
       billingLive: isBillingLive(),
+      isPending, // NEW: Indicates pending verification state
       planId: entitlements.planId,
       subscriptionStatus: subscription.status,
       rendersUsedThisPeriod: subscription.rendersUsedThisPeriod,
