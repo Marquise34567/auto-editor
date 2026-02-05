@@ -10,6 +10,7 @@ import { MobileNav } from '@/components/MobileNav';
 import { UserNav } from '@/components/UserNav';
 import { createCheckoutUrl, storeReturnTo, getCurrentPath } from '@/lib/client/returnTo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { requireAuthOrRedirect } from '@/lib/client/auth';
 
 type BillingPeriod = 'monthly' | 'annual';
 
@@ -40,9 +41,23 @@ function PricingPageContent() {
     try {
       setError(null);
       
-      console.log('[PricingPage] Creating checkout session:', { plan: planId });
+      console.log('[PricingPage:handleUpgrade] Plan selected:', { plan: planId });
 
-      // Call new Stripe checkout endpoint
+      // STEP 1: Check authentication BEFORE making API call
+      console.log('[PricingPage:handleUpgrade] Checking authentication...');
+      const user = await requireAuthOrRedirect('/pricing', router);
+      
+      if (!user) {
+        // User was not authenticated, redirect was initiated
+        console.log('[PricingPage:handleUpgrade] checkout:redirect_to_login');
+        return;
+      }
+
+      // STEP 2: User is authenticated, proceed with checkout
+      console.log('[PricingPage:handleUpgrade] User authenticated, creating checkout session:', { userId: user.id, plan: planId });
+      console.log('[PricingPage:handleUpgrade] checkout:creating_session');
+
+      // Call Stripe checkout endpoint
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,22 +65,14 @@ function PricingPageContent() {
         credentials: 'include',
       });
 
-      // Handle authentication required (401)
-      if (response.status === 401) {
-        console.log('[PricingPage] Authentication required, redirecting to login');
-        const currentPath = window.location.pathname;
-        router.push(`/login?next=${encodeURIComponent(currentPath)}`);
-        return;
-      }
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('[PricingPage] API error:', errorData);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[PricingPage:handleUpgrade] Checkout API error:', errorData);
         
-        // Check for AUTH_REQUIRED in error response
-        if (errorData.error === 'AUTH_REQUIRED') {
-          console.log('[PricingPage] AUTH_REQUIRED error, redirecting to login');
-          router.push('/login?next=/pricing');
+        if (response.status === 401) {
+          console.log('[PricingPage:handleUpgrade] Session expired, redirecting to login');
+          console.log('[PricingPage:handleUpgrade] checkout:unauthorized');
+          router.push('/login?redirect=/pricing');
           return;
         }
         
@@ -75,17 +82,17 @@ function PricingPageContent() {
       const { url } = await response.json();
       
       if (!url) {
-        throw new Error('No checkout URL returned');
+        throw new Error('No checkout URL returned from Stripe');
       }
 
-      console.log('[PricingPage] Redirecting to Stripe:', url);
+      console.log('[PricingPage:handleUpgrade] Redirecting to Stripe Checkout');
 
       // Redirect to Stripe Checkout
       window.location.href = url;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      console.error('[PricingPage] Checkout error:', err);
-      setError(`Failed to process checkout: ${msg}`);
+      console.error('[PricingPage:handleUpgrade] Error:', msg);
+      setError(`Unable to process upgrade: ${msg} Please sign in to upgrade.`);
     }
   };
 
