@@ -37,6 +37,22 @@ function PricingPageContent() {
       });
   }, []);
 
+  // Check if billing is live
+  useEffect(() => {
+    fetch('/api/billing/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && typeof data.billingLive === 'boolean') {
+          setBillingLive(data.billingLive);
+          console.log('[PricingPage] Billing live status:', data.billingLive);
+        }
+      })
+      .catch(err => {
+        console.error('[PricingPage] Failed to check billing status:', err);
+        setBillingLive(false); // Default to disabled on error
+      });
+  }, []);
+
   // Verify pricing page mounted
   useEffect(() => {
     setIsClient(true);
@@ -131,14 +147,6 @@ function PricingPageContent() {
           >
             Dismiss
           </button>
-        </div>
-      )}
-
-      {/* Billing Disabled Banner */}
-      {billingLive === false && (
-        <div className="fixed top-0 left-0 right-0 bg-amber-600/90 text-white px-4 py-3 text-center z-50 mt-10 border-b border-amber-400/30">
-          <span className="font-medium">🔒 Billing is not active yet.</span>
-          <span className="ml-2 text-white/90">No charges will be made. All users are on the Free plan.</span>
         </div>
       )}
 
