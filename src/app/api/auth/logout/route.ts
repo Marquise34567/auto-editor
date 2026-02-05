@@ -1,30 +1,35 @@
 /**
  * Logout API endpoint
  * POST /api/auth/logout
+ * 
+ * Uses Supabase Auth to sign out users
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    const response = NextResponse.json(
+    // Create Supabase client
+    const supabase = await createSupabaseServerClient();
+
+    // Sign out with Supabase (clears session cookies)
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
       { success: true },
       { status: 200 }
     );
-
-    // Clear auth cookie
-    response.cookies.set({
-      name: 'auth_token',
-      value: '',
-      httpOnly: true,
-      maxAge: 0,
-      path: '/',
-    });
-
-    return response;
   } catch (error) {
     console.error('[auth/logout] Error:', error);
     return NextResponse.json(

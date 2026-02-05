@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
+import { MobileNav } from '@/components/MobileNav';
 import { UserNav } from '@/components/UserNav';
 
 type FormMode = 'login' | 'signup';
@@ -51,7 +52,7 @@ function AuthPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#07090f] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#07090f] text-white flex items-center justify-center px-4">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full border-4 border-white/20 border-t-blue-500 h-8 w-8"></div>
           <p className="mt-4 text-white/60">Loading...</p>
@@ -134,34 +135,34 @@ function AuthPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090f] text-white">
+    <div className="min-h-screen bg-[#07090f] text-white overflow-x-hidden">
       {/* Background gradient blurs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-[-20%] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/20 blur-[120px]" />
-        <div className="absolute right-[-10%] top-[20%] h-[360px] w-[360px] rounded-full bg-cyan-500/20 blur-[120px]" />
+        <div className="absolute left-1/2 top-[-20%] h-130 w-130 -translate-x-1/2 rounded-full bg-fuchsia-500/20 blur-[120px]" />
+        <div className="absolute right-[-10%] top-[20%] h-90 w-90 rounded-full bg-cyan-500/20 blur-[120px]" />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 lg:px-16">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
+      <header className="relative z-10 flex items-center justify-between px-4 sm:px-6 lg:px-16 py-4 sm:py-6">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition">
           <Logo />
-          <span className="text-lg font-semibold tracking-tight">AutoEditor</span>
+          <span className="text-base sm:text-lg font-semibold tracking-tight">AutoEditor</span>
         </Link>
-        <nav className="hidden items-center gap-8 text-sm text-white/70 lg:flex">
+        <MobileNav>
           <UserNav />
-        </nav>
+        </MobileNav>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)] px-6">
+      <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)] px-4 sm:px-6">
         <div className="w-full max-w-md">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl backdrop-blur">
+          <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 shadow-xl backdrop-blur">
             {/* Content Header */}
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-semibold">
+            <div className="mb-6 sm:mb-8 text-center">
+              <h1 className="text-2xl sm:text-3xl font-semibold">
                 {mode === 'login' ? 'Welcome back' : 'Start your journey'}
               </h1>
-              <p className="mt-3 text-sm text-white/70">
+              <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-white/70 px-2">
                 {mode === 'login'
                   ? 'Sign in to your account and access the editor'
                   : 'Create an account to turn videos into amazing clips'}
@@ -170,16 +171,16 @@ function AuthPageContent() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-300">
+              <div className="mb-4 sm:mb-6 rounded-lg border border-red-500/50 bg-red-500/10 p-3 sm:p-4 text-xs sm:text-sm text-red-300">
                 {error}
               </div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
                   Email Address
                 </label>
                 <input
@@ -189,13 +190,13 @@ function AuthPageContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
                   placeholder="you@example.com"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-white/40 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3.5 sm:py-2.5 text-base sm:text-sm text-white placeholder-white/40 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 min-h-12"
                 />
               </div>
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
                   Password
                 </label>
                 <input
@@ -205,14 +206,14 @@ function AuthPageContent() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isSubmitting}
                   placeholder={mode === 'login' ? 'Enter your password' : 'At least 6 characters'}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-white/40 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3.5 sm:py-2.5 text-base sm:text-sm text-white placeholder-white/40 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 min-h-12"
                 />
               </div>
 
               {/* Confirm Password (Signup only) */}
               {mode === 'signup' && (
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/80 mb-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/90 mb-2">
                     Confirm Password
                   </label>
                   <input
@@ -222,7 +223,7 @@ function AuthPageContent() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={isSubmitting}
                     placeholder="Re-enter your password"
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-white/40 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3.5 sm:py-2.5 text-base sm:text-sm text-white placeholder-white/40 transition focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 min-h-12"
                   />
                 </div>
               )}
@@ -231,7 +232,7 @@ function AuthPageContent() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-full bg-white px-6 py-2.5 font-semibold text-black shadow-lg shadow-white/10 transition hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+                className="w-full rounded-full bg-white px-6 py-3.5 sm:py-2.5 text-base sm:text-sm font-semibold text-black shadow-lg shadow-white/10 transition hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6 min-h-12"
               >
                 {isSubmitting && (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
@@ -241,7 +242,7 @@ function AuthPageContent() {
             </form>
 
             {/* Toggle Mode */}
-            <div className="mt-6 text-center text-sm text-white/70">
+            <div className="mt-6 text-center text-sm sm:text-xs text-white/70">
               {mode === 'login' ? (
                 <>
                   Don't have an account?{' '}
@@ -253,7 +254,7 @@ function AuthPageContent() {
                       setPassword('');
                       setConfirmPassword('');
                     }}
-                    className="font-semibold text-white hover:text-white/80 transition"
+                    className="font-semibold text-white hover:text-white/80 transition inline-flex items-center min-h-11"
                   >
                     Sign up
                   </button>
@@ -269,7 +270,7 @@ function AuthPageContent() {
                       setPassword('');
                       setConfirmPassword('');
                     }}
-                    className="font-semibold text-white hover:text-white/80 transition"
+                    className="font-semibold text-white hover:text-white/80 transition inline-flex items-center min-h-11"
                   >
                     Log in
                   </button>

@@ -438,15 +438,21 @@ export async function POST(request: Request) {
 
     // ========== INCREMENT RENDER USAGE (atomic, after confirmed success) ==========
     try {
-      const updatedSub = await incrementRenderUsage(userId);
-      console.log(
-        `[generate] Render usage incremented: ${updatedSub.rendersUsedThisPeriod}/${
-          effectivePlan.features.rendersPerMonth >= 999999
-            ? "∞"
-            : effectivePlan.features.rendersPerMonth
-        }`
-      );
-      appendJobLog(jobId, `Subscription: ${updatedSub.rendersUsedThisPeriod} renders used this period`);
+      const usageIncremented = await incrementRenderUsage(userId);
+      if (usageIncremented) {
+        const updatedSub = await getUserSubscription(userId);
+        console.log(
+          `[generate] Render usage incremented: ${updatedSub.rendersUsedThisPeriod}/${
+            effectivePlan.features.rendersPerMonth >= 999999
+              ? "∞"
+              : effectivePlan.features.rendersPerMonth
+          }`
+        );
+        appendJobLog(jobId, `Subscription: ${updatedSub.rendersUsedThisPeriod} renders used this period`);
+      } else {
+        console.warn('[generate] Failed to increment usage in database');
+        appendJobLog(jobId, `Warning: Failed to increment usage counter (data may be inconsistent)`);
+      }
     } catch (err) {
       console.error(`[generate] Failed to increment render usage:`, err);
       appendJobLog(jobId, `Warning: Failed to increment usage counter (data may be inconsistent)`);

@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     let isPending = false;
     
     // Check for pending verification (payment made but webhooks not activating)
-    if (subscription.status === 'incomplete' && subscription.providerSubscriptionId) {
+    if (subscription.status === 'pending_activation' && subscription.providerSubscriptionId) {
       isPending = true;
       message = "Payment received — activation pending (webhook verification required)";
     } else if (!isBillingLive()) {

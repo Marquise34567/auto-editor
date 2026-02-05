@@ -89,21 +89,21 @@ export default function PreviewCard({
   };
   
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <div className="flex items-center justify-between">
+    <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-white/60">Final Output</p>
-          <h3 className="text-lg font-semibold">Full Video Render</h3>
+          <p className="text-sm sm:text-base text-white/60">Final Output</p>
+          <h3 className="text-base sm:text-lg font-semibold">Full Video Render</h3>
         </div>
         {isFinalReady && (
-          <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs text-emerald-200">
+          <span className="rounded-full bg-emerald-500/20 px-3 py-1.5 text-xs text-emerald-200">
             ✓ Ready
           </span>
         )}
       </div>
 
       {/* File size info */}
-      <div className="mt-4 grid grid-cols-2 gap-4 rounded-2xl border border-white/5 bg-black/20 p-3 text-xs">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 rounded-2xl border border-white/5 bg-black/20 p-3 text-xs sm:text-sm">
         <div>
           <p className="text-white/40">Input</p>
           <p className="text-white font-mono">{formatBytes(inputSizeBytes)}</p>
@@ -116,7 +116,7 @@ export default function PreviewCard({
 
       {/* EDL Info */}
       {editsApplied && isFinalReady && (
-        <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs">
+        <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-emerald-400">✂️ Edits Applied</span>
           </div>
@@ -145,7 +145,7 @@ export default function PreviewCard({
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-sm text-white/40">
-              <div className="text-base">
+              <div className="text-sm sm:text-base">
                 {meaningfulEdits
                   ? stageMessage || "Preparing video…"
                   : "No meaningful edits applied"}
@@ -164,7 +164,7 @@ export default function PreviewCard({
         <div className="mt-4">
           <button
             onClick={handleDownload}
-            className="w-full rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-600"
+            className="w-full rounded-full bg-emerald-500 px-4 py-3.5 sm:py-3 text-base sm:text-sm font-semibold text-white hover:bg-emerald-600 min-h-12"
           >
             Download Final Video
           </button>

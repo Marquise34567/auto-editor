@@ -1,11 +1,13 @@
 /**
  * Signup API endpoint
  * POST /api/auth/signup
+ * 
+ * Uses Supabase Auth to register new users
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getUser, createUser, hashPassword, generateToken } from '@/lib/auth/store';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export const runtime = 'nodejs';
 
@@ -47,56 +49,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const existingUser = await getUser(email);
-    if (existingUser) {
+    // Create Supabase client
+    const supabase = await createSupabaseServerClient();
+
+    // Sign up with Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/editor`,
+      },
+    });
+
+    if (error) {
       return NextResponse.json(
-        { success: false, error: 'User already exists' },
-        { status: 409 }
+        { success: false, error: error.message },
+        { status: 400 }
       );
     }
 
-    // Create user
-    const passwordHash = hashPassword(password);
-    const user = await createUser(email, passwordHash);
+    if (!data.user) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to create user' },
+        { status: 500 }
+      );
+    }
 
-    // Generate session token
-    const token = generateToken();
-    const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+    // Create profile
+    await supabase.from('profiles').insert({
+      id: data.user.id,
+      email: data.user.email,
+    });
 
-    const response = NextResponse.json(
+    // Create subscription
+    await supabase.from('subscriptions').insert({
+      user_id: data.user.id,
+      status: 'inactive',
+      plan: 'starter',
+    });
+
+    return NextResponse.json(
       {
         success: true,
         user: {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
+          id: data.user.id,
+          email: data.user.email,
+          createdAt: data.user.created_at,
         },
-        token,
       },
       { status: 201 }
     );
-
-    // Set session cookie
-    response.cookies.set({
-      name: 'auth_token',
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
-
-    // Store token mapping
-    try {
-      const sessions = await import('@/lib/auth/sessions');
-      sessions.setSession(token, user.id, expiresAt);
-    } catch {
-      console.warn('Session store not available');
-    }
-
-    return response;
   } catch (error) {
     console.error('[auth/signup] Error:', error);
     return NextResponse.json(

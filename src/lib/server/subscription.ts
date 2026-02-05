@@ -1,21 +1,26 @@
 /**
- * User Subscription Model & Store
+ * User Subscription Model & Database
  * 
  * Server-side single source of truth for subscription status.
- * Currently: JSON file store (demo). TODO: Replace with real DB + Stripe.
+ * Now backed by Supabase PostgreSQL.
  * 
  * Key principle: Subscription status comes from provider (Stripe),
  * never from client-side or local flags.
  */
 
-import { promises as fs } from "fs";
-import path from "path";
 import type { PlanId } from "@/config/plans";
+import {
+  getUserSubscription as dbGetUserSubscription,
+  updateUserSubscription as dbUpdateUserSubscription,
+  incrementRenderUsage as dbIncrementRenderUsage,
+  updateSubscriptionByStripeCustomerId,
+  getMonthlyUsage,
+} from "@/lib/supabase/db";
 
-export type SubscriptionStatus = "active" | "trialing" | "past_due" | "canceled" | "incomplete" | "unpaid";
+export type SubscriptionStatus = "free" | "active" | "pending_activation" | "past_due" | "canceled";
 
 export interface UserSubscription {
-  /** User ID (from auth system or demo user) */
+  /** User ID (from auth system) */
   userId: string;
   /** Current plan: "free" | "starter" | "creator" | "studio" */
   planId: PlanId;
@@ -38,28 +43,6 @@ export interface UserSubscription {
 }
 
 /**
- * Get the subscription store path.
- * TODO: Replace with real DB query when auth is implemented.
- */
-function getSubscriptionStorePath(): string {
-  return path.join(process.cwd(), "tmp", "subscriptions.json");
-}
-
-/**
- * Initialize subscription store (create empty if missing).
- */
-async function ensureSubscriptionStore() {
-  const storeFile = getSubscriptionStorePath();
-  try {
-    await fs.access(storeFile);
-  } catch {
-    // File doesn't exist, create with empty object
-    await fs.mkdir(path.dirname(storeFile), { recursive: true });
-    await fs.writeFile(storeFile, JSON.stringify({}, null, 2));
-  }
-}
-
-/**
  * Get or create default Free subscription for a user.
  */
 function getDefaultSubscription(userId: string): UserSubscription {
@@ -68,7 +51,7 @@ function getDefaultSubscription(userId: string): UserSubscription {
     userId,
     planId: "free",
     provider: "none",
-    status: "active",
+    status: "free",
     currentPeriodStart: now,
     currentPeriodEnd: now + 30 * 24 * 60 * 60, // 30 days
     rendersUsedThisPeriod: 0,
@@ -77,35 +60,63 @@ function getDefaultSubscription(userId: string): UserSubscription {
 }
 
 /**
- * Get user subscription from store.
+ * Convert Supabase subscription to UserSubscription format
+ */
+function dbSubscriptionToUserSubscription(dbSub: any): UserSubscription {
+  return {
+    userId: dbSub.user_id,
+    planId: (dbSub.plan_id || "free") as PlanId,
+    provider: dbSub.stripe_customer_id ? "stripe" : "none",
+    providerCustomerId: dbSub.stripe_customer_id || undefined,
+    providerSubscriptionId: dbSub.stripe_subscription_id || undefined,
+    status: (dbSub.status || "free") as SubscriptionStatus,
+    currentPeriodStart: Math.floor(new Date(dbSub.current_period_start || Date.now()).getTime() / 1000),
+    currentPeriodEnd: Math.floor(new Date(dbSub.current_period_end || Date.now()).getTime() / 1000),
+    rendersUsedThisPeriod: 0, // Will be fetched separately from usage_monthly
+    updatedAt: Math.floor(new Date(dbSub.updated_at || Date.now()).getTime() / 1000),
+  };
+}
+
+/**
+ * Get monthly render count for the current period
+ */
+async function getRendersUsedThisMonth(userId: string, monthKey: string): Promise<number> {
+  try {
+    const usage = await getMonthlyUsage(userId, monthKey);
+    return usage?.renders_used || 0;
+  } catch (error) {
+    console.error("[subscription] Error getting usage:", error);
+    return 0;
+  }
+}
+
+/**
+ * Get current month key (YYYY-MM format)
+ */
+function getCurrentMonthKey(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
+
+/**
+ * Get user subscription from Supabase.
  * Returns Free plan if user not found.
- * Automatically resets period if expired.
  */
 export async function getUserSubscription(userId: string): Promise<UserSubscription> {
   try {
-    await ensureSubscriptionStore();
-    const storeFile = getSubscriptionStorePath();
-    const content = await fs.readFile(storeFile, "utf-8");
-    const store = JSON.parse(content || "{}") as Record<string, UserSubscription>;
-
-    let subscription = store[userId];
-    if (!subscription) {
-      subscription = getDefaultSubscription(userId);
-      store[userId] = subscription;
-      await fs.writeFile(storeFile, JSON.stringify(store, null, 2));
-      return subscription;
+    const dbSub = await dbGetUserSubscription(userId);
+    
+    if (!dbSub) {
+      return getDefaultSubscription(userId);
     }
 
-    // Auto-reset period if expired
-    const now = Math.floor(Date.now() / 1000);
-    if (now >= subscription.currentPeriodEnd) {
-      subscription.rendersUsedThisPeriod = 0;
-      subscription.currentPeriodStart = now;
-      subscription.currentPeriodEnd = now + 30 * 24 * 60 * 60;
-      subscription.updatedAt = now;
-      store[userId] = subscription;
-      await fs.writeFile(storeFile, JSON.stringify(store, null, 2));
-    }
+    const subscription = dbSubscriptionToUserSubscription(dbSub);
+    
+    // Get current month's render usage
+    const monthKey = getCurrentMonthKey();
+    subscription.rendersUsedThisPeriod = await getRendersUsedThisMonth(userId, monthKey);
 
     return subscription;
   } catch (error) {
@@ -117,28 +128,37 @@ export async function getUserSubscription(userId: string): Promise<UserSubscript
 /**
  * Update user subscription.
  * Called by Stripe webhook handler.
- * TODO: When Stripe is fully integrated, this updates from webhook events.
  */
 export async function updateUserSubscription(
   userId: string,
   updates: Partial<UserSubscription>
 ): Promise<UserSubscription> {
   try {
-    await ensureSubscriptionStore();
-    const storeFile = getSubscriptionStorePath();
-    const content = await fs.readFile(storeFile, "utf-8");
-    const store = JSON.parse(content || "{}") as Record<string, UserSubscription>;
+    // Convert UserSubscription format to Supabase format
+    const dbUpdates: any = {};
+    if (updates.planId) dbUpdates.plan_id = updates.planId;
+    if (updates.status) dbUpdates.status = updates.status;
+    if (updates.providerCustomerId) dbUpdates.stripe_customer_id = updates.providerCustomerId;
+    if (updates.providerSubscriptionId) dbUpdates.stripe_subscription_id = updates.providerSubscriptionId;
+    if (updates.currentPeriodStart) {
+      dbUpdates.current_period_start = new Date(updates.currentPeriodStart * 1000).toISOString();
+    }
+    if (updates.currentPeriodEnd) {
+      dbUpdates.current_period_end = new Date(updates.currentPeriodEnd * 1000).toISOString();
+    }
 
-    let subscription = store[userId] || getDefaultSubscription(userId);
-    subscription = {
-      ...subscription,
-      ...updates,
-      userId, // Always preserve userId
-      updatedAt: Math.floor(Date.now() / 1000),
-    };
+    const dbSub = await dbUpdateUserSubscription(userId, dbUpdates);
+    
+    if (!dbSub) {
+      throw new Error("Failed to update subscription");
+    }
 
-    store[userId] = subscription;
-    await fs.writeFile(storeFile, JSON.stringify(store, null, 2));
+    const subscription = dbSubscriptionToUserSubscription(dbSub);
+    
+    // Get current month's render usage
+    const monthKey = getCurrentMonthKey();
+    subscription.rendersUsedThisPeriod = await getRendersUsedThisMonth(userId, monthKey);
+
     return subscription;
   } catch (error) {
     console.error("[subscription] Error updating subscription:", error);
@@ -172,7 +192,7 @@ export interface PlanEntitlements {
  * 
  * CRITICAL BILLING SAFETY:
  * - If BILLING_LIVE !== "true", ALWAYS return FREE plan
- * - If subscription.status is not "active" or "trialing", return FREE plan
+ * - If subscription is not active, return FREE plan
  * - Otherwise return plan-based entitlements
  * 
  * This is the ONLY source of truth for feature access.
@@ -191,14 +211,11 @@ export async function getUserEntitlements(userId: string): Promise<PlanEntitleme
     };
   }
 
-  // Get subscription from store
+  // Get subscription from database
   const subscription = await getUserSubscription(userId);
 
-  // If subscription is not active/trialing, downgrade to FREE
-  const isActive =
-    subscription.status === "active" || subscription.status === "trialing";
-  
-  if (!isActive || subscription.planId === "free") {
+  // If subscription is not active, downgrade to FREE
+  if (!isSubscriptionActive(subscription) || subscription.planId === "free") {
     return {
       planId: "free",
       rendersPerMonth: 10,
@@ -259,13 +276,16 @@ export async function getUserEntitlements(userId: string): Promise<PlanEntitleme
 /**
  * Increment render usage for current period.
  * Only called after successful render completion.
- * Atomic operation (in production, use DB transaction).
+ * Uses atomic database operation.
  */
-export async function incrementRenderUsage(userId: string): Promise<UserSubscription> {
-  const subscription = await getUserSubscription(userId);
-  return updateUserSubscription(userId, {
-    rendersUsedThisPeriod: subscription.rendersUsedThisPeriod + 1,
-  });
+export async function incrementRenderUsage(userId: string): Promise<boolean> {
+  try {
+    const monthKey = getCurrentMonthKey();
+    return await dbIncrementRenderUsage(userId, monthKey);
+  } catch (error) {
+    console.error("[subscription] Error incrementing usage:", error);
+    return false;
+  }
 }
 
 /**
@@ -278,8 +298,8 @@ export function getDemoUserId(): string {
 
 /**
  * Helper: Check if subscription is active (unlocked).
- * "active" and "trialing" are considered valid.
+ * "free" status means free tier, "active" means paid/trialing.
  */
 export function isSubscriptionActive(subscription: UserSubscription): boolean {
-  return subscription.status === "active" || subscription.status === "trialing";
+  return subscription.status === "active" || subscription.status === "pending_activation";
 }

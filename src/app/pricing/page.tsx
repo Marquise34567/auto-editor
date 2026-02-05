@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PLANS, getAnnualDiscount, formatPrice, getMonthlyEquivalent, type PlanId } from '@/config/plans';
 import { Logo } from '@/components/Logo';
 import { BetaBadge } from '@/components/BetaBadge';
+import { MobileNav } from '@/components/MobileNav';
 import { UserNav } from '@/components/UserNav';
 import { createCheckoutUrl, storeReturnTo, getCurrentPath } from '@/lib/client/returnTo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -117,11 +118,11 @@ function PricingPageContent() {
   } : null;
 
   return (
-    <div className="min-h-screen bg-[#07090f] text-white">
+    <div className="min-h-screen bg-[#07090f] text-white overflow-x-hidden">
       {/* Background gradient blurs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-[-20%] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-fuchsia-500/20 blur-[120px]" />
-        <div className="absolute right-[-10%] top-[20%] h-[360px] w-[360px] rounded-full bg-cyan-500/20 blur-[120px]" />
+        <div className="absolute left-1/2 top-[-20%] h-130 w-130 -translate-x-1/2 rounded-full bg-fuchsia-500/20 blur-[120px]" />
+        <div className="absolute right-[-10%] top-[20%] h-90 w-90 rounded-full bg-cyan-500/20 blur-[120px]" />
       </div>
 
       {/* Debug Banner (Dev Only) */}
@@ -153,35 +154,35 @@ function PricingPageContent() {
       )}
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 lg:px-16">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
+      <header className="relative z-10 flex items-center justify-between px-4 sm:px-6 lg:px-16 py-4 sm:py-6">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition">
           <Logo />
-          <span className="text-lg font-semibold tracking-tight">AutoEditor</span>
+          <span className="text-base sm:text-lg font-semibold tracking-tight">AutoEditor</span>
           <BetaBadge />
         </Link>
-        <nav className="hidden items-center gap-8 text-sm text-white/70 lg:flex">
+        <MobileNav>
           <UserNav />
-        </nav>
+        </MobileNav>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 container mx-auto px-6 py-20 lg:px-16">
+      <main className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-20">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold">
+        <div className="text-center mb-10 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold px-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="mt-4 text-lg text-white/70 max-w-2xl mx-auto">
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-white/70 max-w-2xl mx-auto px-4">
             Scale as your channel grows. Start free, upgrade when you need more.
           </p>
         </div>
 
         {/* Billing Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="inline-flex items-center gap-4 bg-white/5 rounded-full p-1 border border-white/10">
+        <div className="flex justify-center mb-8 sm:mb-12 px-4">
+          <div className="inline-flex items-center gap-2 sm:gap-4 bg-white/5 rounded-full p-1 border border-white/10 w-full sm:w-auto max-w-sm sm:max-w-none">
             <button
               onClick={() => setBillingPeriod('monthly')}
-              className={`px-8 py-2 rounded-full font-medium transition-all ${
+              className={`flex-1 sm:flex-none px-6 sm:px-8 py-2.5 sm:py-2 rounded-full font-medium transition-all text-sm min-h-11 ${
                 billingPeriod === 'monthly'
                   ? 'bg-white text-black'
                   : 'text-white/70 hover:text-white'
@@ -191,14 +192,14 @@ function PricingPageContent() {
             </button>
             <button
               onClick={() => setBillingPeriod('annual')}
-              className={`px-8 py-2 rounded-full font-medium transition-all relative ${
+              className={`flex-1 sm:flex-none px-6 sm:px-8 py-2.5 sm:py-2 rounded-full font-medium transition-all relative text-sm min-h-11 ${
                 billingPeriod === 'annual'
                   ? 'bg-white text-black'
                   : 'text-white/70 hover:text-white'
               }`}
             >
               Annual
-              <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold bg-emerald-500 text-white px-2 py-1 rounded whitespace-nowrap">
+              <span className="absolute -top-7 sm:-top-6 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold bg-emerald-500 text-white px-2 py-1 rounded whitespace-nowrap">
                 Save 20%
               </span>
             </button>
@@ -206,7 +207,7 @@ function PricingPageContent() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto mb-12 sm:mb-16">
           {plansByPrice.map((plan) => {
             const price = billingPeriod === 'monthly' ? plan.monthlyPriceCents : plan.annualPriceCents;
             const displayPrice = formatPrice(price);
@@ -216,30 +217,30 @@ function PricingPageContent() {
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-3xl border transition-all overflow-visible ${
+                className={`relative rounded-2xl sm:rounded-3xl border transition-all overflow-visible ${
                   plan.highlighted
-                    ? 'border-blue-500/40 bg-white/10 scale-105'
-                    : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/7'
+                    ? 'border-blue-500/40 bg-white/10 sm:scale-105'
+                    : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/7 active:scale-95 sm:active:scale-100'
                 }`}
               >
                 {/* Most Popular Badge */}
                 {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <span className="bg-blue-500/20 border border-blue-500/40 text-blue-200 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                  <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-10">
+                    <span className="bg-blue-500/20 border border-blue-500/40 text-blue-200 text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-full whitespace-nowrap">
                       Popular
                     </span>
                   </div>
                 )}
 
-                <div className="p-6">
+                <div className="p-5 sm:p-6">
                   {/* Plan Name & Description */}
-                  <h3 className="text-lg font-semibold text-white mb-1">{plan.name}</h3>
-                  <p className="text-white/60 text-sm mb-6">{plan.description}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-1">{plan.name}</h3>
+                  <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-6">{plan.description}</p>
 
                   {/* Price */}
-                  <div className="mb-6">
+                  <div className="mb-5 sm:mb-6">
                     <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-3xl font-semibold text-white">
+                      <span className="text-2xl sm:text-3xl font-semibold text-white">
                         {price === 0 ? 'Free' : displayPrice}
                       </span>
                       {price > 0 && (
@@ -249,7 +250,7 @@ function PricingPageContent() {
                       )}
                     </div>
                     {monthlyEquivalent && (
-                      <p className="text-xs text-white/50">{monthlyEquivalent}/month when billed annually</p>
+                      <p className="text-[10px] sm:text-xs text-white/50">{monthlyEquivalent}/month when billed annually</p>
                     )}
                   </div>
 
@@ -257,7 +258,7 @@ function PricingPageContent() {
                   <button
                     onClick={() => handleUpgrade(plan.id)}
                     disabled={billingLive === false && price > 0}
-                    className={`w-full py-2.5 rounded-full font-semibold text-sm transition-all mb-6 ${
+                    className={`w-full py-3 sm:py-2.5 rounded-full font-semibold text-sm transition-all mb-5 sm:mb-6 min-h-11 ${
                       plan.highlighted
                         ? 'bg-white text-black shadow-lg shadow-white/10 hover:bg-white/90'
                         : 'bg-white/10 text-white hover:bg-white/20 border border-white/10'
@@ -267,10 +268,10 @@ function PricingPageContent() {
                   </button>
 
                   {/* Features - Condensed */}
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs sm:text-sm">
                     {/* Renders */}
                     <div className="flex items-start gap-2">
-                      <span className="text-blue-400 flex-shrink-0 mt-0.5">✓</span>
+                      <span className="text-blue-400 shrink-0 mt-0.5">✓</span>
                       <div className="text-white/70">
                         {plan.features.rendersPerMonth >= 999999
                           ? 'Unlimited renders'
@@ -280,7 +281,7 @@ function PricingPageContent() {
 
                     {/* Max Video Length */}
                     <div className="flex items-start gap-2">
-                      <span className="text-blue-400 flex-shrink-0 mt-0.5">✓</span>
+                      <span className="text-blue-400 shrink-0 mt-0.5">✓</span>
                       <div className="text-white/70">
                         {plan.features.maxVideoLengthMinutes >= 999
                           ? 'Unlimited video length'
@@ -290,7 +291,7 @@ function PricingPageContent() {
 
                     {/* Export Quality */}
                     <div className="flex items-start gap-2">
-                      <span className="text-blue-400 flex-shrink-0 mt-0.5">✓</span>
+                      <span className="text-blue-400 shrink-0 mt-0.5">✓</span>
                       <div className="text-white/70">
                         {plan.features.exportQuality === '4k' ? '4K' : plan.features.exportQuality} quality
                       </div>
@@ -299,9 +300,9 @@ function PricingPageContent() {
                     {/* Watermark */}
                     <div className="flex items-start gap-2">
                       {plan.features.hasWatermark ? (
-                        <span className="text-white/40 flex-shrink-0 mt-0.5">✗</span>
+                        <span className="text-white/40 shrink-0 mt-0.5">✗</span>
                       ) : (
-                        <span className="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+                        <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
                       )}
                       <div className="text-white/70">
                         {plan.features.hasWatermark ? 'Watermark' : 'No watermark'}
@@ -311,7 +312,7 @@ function PricingPageContent() {
                     {/* Queue Priority */}
                     {plan.features.queuePriority !== 'background' && (
                       <div className="flex items-start gap-2">
-                        <span className="text-blue-400 flex-shrink-0 mt-0.5">✓</span>
+                        <span className="text-blue-400 shrink-0 mt-0.5">✓</span>
                         <div className="text-white/70">
                           {plan.features.queuePriority === 'standard'
                             ? 'Standard speed'

@@ -13,24 +13,24 @@ export default function ClipGrid({
   onDownload,
 }: ClipGridProps) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Generated Clips</h3>
-        <span className="text-sm text-white/50">{clips.length} results</span>
+    <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold">Generated Clips</h3>
+        <span className="text-sm sm:text-base text-white/50">{clips.length} results</span>
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 sm:mt-6 grid gap-4 sm:grid-cols-2">
         {clips.map((clip) => (
           <div
             key={clip.id}
             className="rounded-2xl border border-white/10 bg-black/40 p-4"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs text-white/60">
+              <span className="text-xs sm:text-sm text-white/60">
                 {clip.duration.toFixed(1)}s · Score {clip.score}
               </span>
               <span className="text-xs text-white/40">{clip.id.slice(0, 6)}</span>
             </div>
-            <div className="mt-3 aspect-[16/9] w-full overflow-hidden rounded-xl border border-white/10 bg-black/30">
+            <div className="mt-3 aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/30">
               {clip.thumbnailPath ? (
                 <Image
                   src={clip.thumbnailPath}
@@ -51,21 +51,21 @@ export default function ClipGrid({
                 href={clip.outputPath}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full border border-white/15 px-3 py-2 text-xs text-white/80"
+                className="rounded-full border border-white/15 px-3 py-2.5 text-xs sm:text-sm text-white/80 inline-flex items-center min-h-11"
               >
                 Preview
               </a>
               <a
                 href={clip.outputPath}
                 download
-                className="rounded-full border border-white/15 px-3 py-2 text-xs text-white/80"
+                className="rounded-full border border-white/15 px-3 py-2.5 text-xs sm:text-sm text-white/80 inline-flex items-center min-h-11"
                 onClick={() => onDownload(clip)}
               >
                 Download
               </a>
               <button
                 onClick={() => onUseFinal(clip)}
-                className="rounded-full bg-white px-3 py-2 text-xs font-semibold text-black"
+                className="rounded-full bg-white px-3 py-2.5 text-xs sm:text-sm font-semibold text-black min-h-11"
               >
                 Use as Final
               </button>

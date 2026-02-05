@@ -1,11 +1,13 @@
 /**
  * Login API endpoint
  * POST /api/auth/login
+ * 
+ * Uses Supabase Auth to authenticate users
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getUser, verifyPassword, generateToken } from '@/lib/auth/store';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export const runtime = 'nodejs';
 
@@ -22,60 +24,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user
-    const user = await getUser(email);
-    if (!user) {
+    // Create Supabase client
+    const supabase = await createSupabaseServerClient();
+
+    // Sign in with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error || !data.session) {
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Verify password
-    if (!verifyPassword(password, user.passwordHash)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Generate session token
-    const token = generateToken();
-    const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7 days
-
-    const response = NextResponse.json(
+    // Return success - Supabase cookies are automatically set
+    return NextResponse.json(
       {
         success: true,
         user: {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
+          id: data.user.id,
+          email: data.user.email,
+          createdAt: data.user.created_at,
         },
-        token,
       },
       { status: 200 }
     );
-
-    // Set session cookie
-    response.cookies.set({
-      name: 'auth_token',
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    });
-
-    // Store token mapping (TODO: use real session store)
-    try {
-      const sessions = await import('@/lib/auth/sessions');
-      sessions.setSession(token, user.id, expiresAt);
-    } catch {
-      console.warn('Session store not available');
-    }
-
-    return response;
   } catch (error) {
     console.error('[auth/login] Error:', error);
     return NextResponse.json(

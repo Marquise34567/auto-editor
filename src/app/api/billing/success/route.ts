@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       
       await updateUserSubscription(userId, {
         planId: 'free', // Keep on FREE until webhooks activate
-        status: 'incomplete',
+        status: 'pending_activation',
         provider: 'stripe',
         providerCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
         providerSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,

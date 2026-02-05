@@ -493,35 +493,35 @@ export default function EditorPage() {
       {/* Pending Subscription Banner (shows if payment made but webhooks not live) */}
       <PendingSubscriptionBanner />
       
-      <div className="min-h-screen bg-[#07090f] px-6 py-10 text-white lg:px-16">
-      <div className="mx-auto max-w-6xl space-y-8">{/* Existing content below */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="min-h-screen bg-[#07090f] px-4 sm:px-6 py-6 sm:py-10 text-white lg:px-16">
+      <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8">{/* Existing content below */}
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4 sm:gap-6">
           <div>
-            <h1 className="text-3xl font-semibold">Auto-Editor</h1>
-            <p className="text-sm text-white/60">
+            <h1 className="text-2xl sm:text-3xl font-semibold">Auto-Editor</h1>
+            <p className="text-sm sm:text-base text-white/60">
               Premium creator workflow for high-retention vertical clips.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/60">
+            <div className="mt-3 flex flex-wrap gap-2 text-xs sm:text-sm text-white/60">
               {analysisDone && (
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-emerald-200">
+                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-emerald-200">
                   Analysis done
                 </span>
               )}
               {generationDone && (
-                <span className="rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-1 text-fuchsia-200">
+                <span className="rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-1.5 text-fuchsia-200">
                   Clips ready
                 </span>
               )}
             </div>
-            <div className="mt-4 grid gap-2 text-xs text-white/60">
+            <div className="mt-4 grid gap-2 text-xs sm:text-sm text-white/60">
           {/* Billing Status Display */}
           {billingStatus && (
-            <div className="flex items-center gap-6">
-              <div className="text-right">
-                <p className="text-xs uppercase tracking-widest text-white/50 mb-1">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="text-left sm:text-right">
+                <p className="text-xs sm:text-sm uppercase tracking-widest text-white/50 mb-1">
                   {getPlan(billingStatus.planId).name} Plan
                 </p>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-base sm:text-sm font-semibold text-white">
                   {billingStatus.rendersRemaining === 999999 ? (
                     <>Unlimited renders</>
                   ) : (
@@ -534,7 +534,7 @@ export default function EditorPage() {
                 {billingStatus.planId === 'free' && (
                   <Link
                     href="/pricing"
-                    className="inline-block mt-2 text-xs px-3 py-1 rounded-full bg-blue-600/30 text-blue-300 hover:bg-blue-600/50 border border-blue-500/30 transition-colors"
+                    className="inline-flex mt-2 text-xs sm:text-sm px-3 py-2 rounded-full bg-blue-600/30 text-blue-300 hover:bg-blue-600/50 border border-blue-500/30 transition-colors min-h-11 items-center"
                   >
                     Upgrade
                   </Link>
@@ -589,16 +589,16 @@ export default function EditorPage() {
         </div>
 
         {error && (
-          <div className="rounded-3xl border border-red-500/40 bg-red-500/10 p-6">
+          <div className="rounded-2xl sm:rounded-3xl border border-red-500/40 bg-red-500/10 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-red-200">Something went wrong</h3>
-                <p className="text-sm text-red-200/70">{error}</p>
+                <h3 className="text-base sm:text-lg font-semibold text-red-200">Something went wrong</h3>
+                <p className="text-sm sm:text-base text-red-200/70">{error}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => setShowErrorDetails((prev) => !prev)}
-                  className="rounded-full border border-red-200/30 px-4 py-2 text-xs text-red-200"
+                  className="rounded-full border border-red-200/30 px-4 py-2.5 text-xs sm:text-sm text-red-200 min-h-11"
                 >
                   {showErrorDetails ? "Hide details" : "Show details"}
                 </button>
@@ -611,21 +611,21 @@ export default function EditorPage() {
                     setJobId(null);
                     setAnalyzing(false);
                   }}
-                  className="rounded-full border border-red-200/30 bg-red-500/20 px-4 py-2 text-xs text-red-200 hover:bg-red-500/30"
+                  className="rounded-full border border-red-200/30 bg-red-500/20 px-4 py-2.5 text-xs sm:text-sm text-red-200 hover:bg-red-500/30 min-h-11"
                 >
                   Try Again
                 </button>
               </div>
             </div>
             {showErrorDetails && (
-              <pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded-2xl border border-red-500/20 bg-black/30 p-4 text-xs text-red-100/90">
+              <pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded-2xl border border-red-500/20 bg-black/30 p-4 text-xs sm:text-sm text-red-100/90">
                 {errorDetails ?? "No details available"}
               </pre>
             )}
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-[360px_1fr]">
           <EditorControls
             title={title}
             onTitleChange={setTitle}
@@ -675,24 +675,24 @@ export default function EditorPage() {
         </div>
 
         {showCrop && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-            <div className="w-full max-w-4xl rounded-3xl border border-white/10 bg-[#0c1018] p-6">
-              <div className="flex items-center justify-between">
+          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/70 p-4 sm:p-6">
+            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl border border-white/10 bg-[#0c1018] p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold">Manual Facecam Crop</h3>
-                  <p className="text-sm text-white/50">
+                  <h3 className="text-base sm:text-lg font-semibold">Manual Facecam Crop</h3>
+                  <p className="text-sm sm:text-base text-white/50">
                     Set a normalized crop area for the facecam layer.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowCrop(false)}
-                  className="rounded-full border border-white/15 px-4 py-2 text-xs text-white/70"
+                  className="rounded-full border border-white/15 px-4 py-2.5 text-xs sm:text-sm text-white/70 min-h-11"
                 >
                   Close
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_260px]">
+              <div className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 lg:grid-cols-[1fr_260px]">
                 <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black/40">
                   {fileUrl ? (
                     <video
@@ -701,7 +701,7 @@ export default function EditorPage() {
                       controls
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-sm text-white/50">
+                    <div className="flex h-full w-full items-center justify-center text-sm sm:text-base text-white/50">
                       Upload a video to preview crop
                     </div>
                   )}
@@ -723,7 +723,7 @@ export default function EditorPage() {
                         { key: "h", label: "Height" },
                       ] as const).map((item) => (
                         <div key={item.key}>
-                          <label className="text-xs uppercase tracking-[0.2em] text-white/40">
+                          <label className="text-xs sm:text-sm uppercase tracking-[0.2em] text-white/40">
                             {item.label}
                           </label>
                           <input
@@ -744,7 +744,7 @@ export default function EditorPage() {
                       ))}
                     </>
                   ) : (
-                    <p className="text-sm text-white/50">
+                    <p className="text-sm sm:text-base text-white/50">
                       Enable manual crop in settings to adjust values.
                     </p>
                   )}
