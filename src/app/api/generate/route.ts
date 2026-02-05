@@ -8,7 +8,7 @@ import { checkBinaries } from "@/lib/ffmpeg/resolve";
 import { applyEDL } from "@/lib/edl/apply";
 import type { EDL } from "@/lib/edl/types";
 import { getPlan } from "@/config/plans";
-import { getUserSubscription, getDemoUserId, incrementRenderUsage, isSubscriptionActive } from "@/lib/server/subscription";
+import { getUserSubscription, getDemoUserId, incrementRenderUsage, getUserEntitlements } from "@/lib/server/subscription";
 import { getVideoMetadata } from "@/lib/server/ffprobe";
 
 export const runtime = "nodejs";
@@ -104,25 +104,22 @@ export async function POST(request: Request) {
 
     console.log(`[generate] EDL found: hook + ${edl.segments.length} segments`);
 
-    // ========== SERVER-SIDE SUBSCRIPTION GATING: Non-bypassable entitlement check ==========
+    // ========== SERVER-SIDE ENTITLEMENT CHECK: Non-bypassable billing enforcement ==========
     const userId = getDemoUserId(); // TODO: Get real userId from auth session
+    const entitlements = await getUserEntitlements(userId);
     const subscription = await getUserSubscription(userId);
-    const isActive = isSubscriptionActive(subscription);
-    const effectivePlanId = isActive ? subscription.planId : "free"; // Downgrade to Free if inactive
+    const effectivePlanId = entitlements.planId;
     const effectivePlan = getPlan(effectivePlanId);
-    if (!isActive) {
-      console.warn(
-        `[generate] Subscription not active (${subscription.status}); applying Free entitlements for user ${userId}`
-      );
-    }
 
-    // Check 1: Render quota
+    console.log(`[generate] User ${userId} entitlements: plan=${effectivePlanId}, renders=${entitlements.rendersPerMonth}`);
+
+    // Check 1: Render quota (based on entitlements, not subscription)
     if (
-      effectivePlan.features.rendersPerMonth < 999999 &&
-      subscription.rendersUsedThisPeriod >= effectivePlan.features.rendersPerMonth
+      entitlements.rendersPerMonth < 999999 &&
+      subscription.rendersUsedThisPeriod >= entitlements.rendersPerMonth
     ) {
       const errorMsg = `Render limit exceeded on ${effectivePlan.name} plan`;
-      console.warn(`[generate] ${errorMsg} (user: ${userId}, status: ${subscription.status})`);
+      console.warn(`[generate] ${errorMsg} (user: ${userId}, used: ${subscription.rendersUsedThisPeriod}/${entitlements.rendersPerMonth})`);
 
       updateJob(jobId, {
         status: "FAILED",
@@ -132,7 +129,7 @@ export async function POST(request: Request) {
       });
       appendJobLog(
         jobId,
-        `Rejected: ${errorMsg} (${subscription.rendersUsedThisPeriod}/${effectivePlan.features.rendersPerMonth})`
+        `Rejected: ${errorMsg} (${subscription.rendersUsedThisPeriod}/${entitlements.rendersPerMonth})`
       );
 
       return NextResponse.json(
@@ -146,9 +143,62 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check 2: Max video length
+    // Check 2: Max video length (based on entitlements)
     const inputMetadata = await getVideoMetadata(job.filePath);
-    const maxDurationSec = effectivePlan.features.maxVideoLengthMinutes * 60;
+    const inputDurationMinutes = inputMetadata.duration / 60;
+    if (inputDurationMinutes > entitlements.maxVideoLengthMinutes) {
+      const errorMsg = `Video too long for ${effectivePlan.name} plan (max ${entitlements.maxVideoLengthMinutes} min)`;
+      console.warn(`[generate] ${errorMsg} (video: ${inputDurationMinutes.toFixed(1)} min)`);
+
+      updateJob(jobId, {
+        status: "FAILED",
+        stage: "Failed",
+        message: errorMsg,
+        error: errorMsg,
+      });
+      appendJobLog(jobId, `Rejected: ${errorMsg}`);
+
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "VIDEO_TOO_LONG",
+          message: "Video exceeds plan limit",
+          planRequired: effectivePlanId === "free" ? "starter" : effectivePlanId,
+        },
+        { status: 402 }
+      );
+    }
+
+    // Check 3: Export quality (based on entitlements)
+    const requestedQuality = exportQuality || entitlements.exportQuality;
+    const qualityOrder = { "720p": 1, "1080p": 2, "4k": 3 };
+    const maxQualityLevel = qualityOrder[entitlements.exportQuality];
+    const requestedQualityLevel = qualityOrder[requestedQuality];
+
+    if (requestedQualityLevel > maxQualityLevel) {
+      const errorMsg = `Export quality ${requestedQuality} not allowed on ${effectivePlan.name} plan (max ${entitlements.exportQuality})`;
+      console.warn(`[generate] ${errorMsg}`);
+
+      updateJob(jobId, {
+        status: "FAILED",
+        stage: "Failed",
+        message: errorMsg,
+        error: errorMsg,
+      });
+      appendJobLog(jobId, `Rejected: ${errorMsg}`);
+
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "QUALITY_NOT_ALLOWED",
+          message: "Export quality exceeds plan limit",
+          planRequired: effectivePlanId === "free" ? "starter" : effectivePlanId,
+        },
+        { status: 402 }
+      );
+    }
+
+    const maxDurationSec = entitlements.maxVideoLengthMinutes * 60;
     if (inputMetadata.duration > maxDurationSec) {
       const errorMsg = `Video too long for ${effectivePlan.name} plan`;
       updateJob(jobId, {
@@ -164,34 +214,6 @@ export async function POST(request: Request) {
           ok: false,
           code: "MAX_DURATION_EXCEEDED",
           message: "Upgrade to upload longer videos",
-          planRequired: effectivePlanId === "free" ? "starter" : effectivePlanId,
-        },
-        { status: 402 }
-      );
-    }
-
-    // Check 3: Export quality cap
-    const requestedQuality = exportQuality ?? effectivePlan.features.exportQuality;
-    const qualityRank: Record<"720p" | "1080p" | "4k", number> = {
-      "720p": 1,
-      "1080p": 2,
-      "4k": 3,
-    };
-    if (qualityRank[requestedQuality] > qualityRank[effectivePlan.features.exportQuality]) {
-      const errorMsg = `Export quality ${requestedQuality} exceeds plan limit (${effectivePlan.features.exportQuality})`;
-      updateJob(jobId, {
-        status: "FAILED",
-        stage: "Failed",
-        message: errorMsg,
-        error: errorMsg,
-      });
-      appendJobLog(jobId, errorMsg);
-
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "QUALITY_LIMIT",
-          message: "Upgrade to export higher quality",
           planRequired: effectivePlanId === "free" ? "starter" : effectivePlanId,
         },
         { status: 402 }

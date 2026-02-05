@@ -4,6 +4,12 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { validateReturnTo } from '@/lib/client/returnTo';
 
+type BillingStatus = {
+  billingLive: boolean;
+  planId: string;
+  subscriptionStatus: string;
+};
+
 const POLLING_INTERVAL = 1500; // 1.5 seconds
 const MAX_POLLING_TIME = 60000; // 60 seconds
 
@@ -14,9 +20,10 @@ function SuccessContent() {
   const sessionId = searchParams.get('session_id');
   const returnTo = validateReturnTo(searchParams.get('returnTo'));
 
-  const [status, setStatus] = useState<'confirming' | 'confirmed' | 'error'>('confirming');
+  const [status, setStatus] = useState<'confirming' | 'confirmed' | 'error' | 'billing_disabled'>('confirming');
   const [pollingTime, setPollingTime] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [billingLive, setBillingLive] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
@@ -29,12 +36,26 @@ function SuccessContent() {
     const pollInterval = setInterval(async () => {
       try {
         const response = await fetch('/api/billing/status');
-        const data = await response.json();
+        const data: BillingStatus & { ok: boolean } = await response.json();
 
         if (!response.ok || !data.ok) {
-          console.error('[success] Status check failed:', data.error);
+          console.error('[success] Status check failed:', data);
           return;
         }
+
+        // Check if billing is even live
+        if (data.billingLive === false) {
+          setBillingLive(false);
+          setStatus('billing_disabled');
+          clearInterval(pollInterval);
+          // Redirect back after showing message
+          setTimeout(() => {
+            router.push(returnTo);
+          }, 3000);
+          return;
+        }
+
+        setBillingLive(true);
 
         // Check if subscription is confirmed active/trialing
         const isConfirmed =
@@ -71,6 +92,31 @@ function SuccessContent() {
 
     return () => clearInterval(pollInterval);
   }, [sessionId, router, returnTo]);
+
+  if (status === 'billing_disabled') {
+    return (
+      <div className="min-h-screen bg-[#07090f] text-white flex items-center justify-center px-6">
+        <div className="max-w-md">
+          <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-8 text-center">
+            <div className="text-4xl mb-4">🔒</div>
+            <h1 className="text-2xl font-semibold mb-2">Billing Not Active</h1>
+            <p className="text-white/70 mb-4">
+              Billing is not live yet. No charges have been made.
+            </p>
+            <p className="text-white/60 text-sm mb-6">
+              You'll be redirected back to the editor. Your access remains on the Free plan.
+            </p>
+            <a
+              href={returnTo}
+              className="inline-block rounded-full bg-white px-6 py-2.5 font-semibold text-black hover:bg-white/90 transition"
+            >
+              Continue
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (status === 'error') {
     return (

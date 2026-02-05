@@ -16,6 +16,23 @@ function PricingPageContent() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [billingLive, setBillingLive] = useState<boolean | null>(null);
+
+  // Check if billing is live
+  useEffect(() => {
+    fetch('/api/billing/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && typeof data.billingLive === 'boolean') {
+          setBillingLive(data.billingLive);
+          console.log('[PricingPage] Billing live status:', data.billingLive);
+        }
+      })
+      .catch(err => {
+        console.error('[PricingPage] Failed to check billing status:', err);
+        setBillingLive(false); // Default to disabled on error
+      });
+  }, []);
 
   // Verify pricing page mounted
   useEffect(() => {
@@ -74,6 +91,14 @@ function PricingPageContent() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* Billing Disabled Banner */}
+      {billingLive === false && (
+        <div className="fixed top-0 left-0 right-0 bg-amber-600/90 text-white px-4 py-3 text-center z-50 mt-10 border-b border-amber-400/30">
+          <span className="font-medium">🔒 Billing is not active yet.</span>
+          <span className="ml-2 text-white/90">No charges will be made. All users are on the Free plan.</span>
         </div>
       )}
 
@@ -180,13 +205,14 @@ function PricingPageContent() {
                   {/* CTA Button */}
                   <button
                     onClick={() => handleUpgrade(plan.id)}
+                    disabled={billingLive === false && price > 0}
                     className={`w-full py-2.5 rounded-full font-semibold text-sm transition-all mb-6 ${
                       plan.highlighted
                         ? 'bg-white text-black shadow-lg shadow-white/10 hover:bg-white/90'
                         : 'bg-white/10 text-white hover:bg-white/20 border border-white/10'
-                    }`}
+                    } ${billingLive === false && price > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {plan.ctaText}
+                    {billingLive === false && price > 0 ? 'Coming Soon' : plan.ctaText}
                   </button>
 
                   {/* Features - Condensed */}

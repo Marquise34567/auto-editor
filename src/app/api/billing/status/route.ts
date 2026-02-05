@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserSubscription, getDemoUserId } from "@/lib/server/subscription";
+import { getUserSubscription, getDemoUserId, getUserEntitlements, isBillingLive } from "@/lib/server/subscription";
 import { getPlan } from "@/config/plans";
 
 export const runtime = "nodejs";
@@ -33,17 +33,15 @@ export async function GET(request: Request) {
     // TODO: Get real userId from auth session
     const userId = getDemoUserId();
 
+    // Get entitlements (enforces billing safety)
+    const entitlements = await getUserEntitlements(userId);
     const subscription = await getUserSubscription(userId);
-    const plan = getPlan(subscription.planId);
+    const plan = getPlan(entitlements.planId); // Use entitlements.planId, not subscription.planId
 
-    // Determine if user can render
-    const isActive =
-      subscription.status === "active" || subscription.status === "trialing";
+    // Determine if user can render (based on entitlements)
     const canRender =
-      isActive &&
-      (plan.features.rendersPerMonth >= 999999 ||
-        subscription.rendersUsedThisPeriod <
-          plan.features.rendersPerMonth);
+      entitlements.rendersPerMonth >= 999999 ||
+      subscription.rendersUsedThisPeriod < entitlements.rendersPerMonth;
 
     // Calculate period info
     const now = Math.floor(Date.now() / 1000);
@@ -53,33 +51,33 @@ export async function GET(request: Request) {
     );
     const rendersRemaining = Math.max(
       0,
-      plan.features.rendersPerMonth >= 999999
+      entitlements.rendersPerMonth >= 999999
         ? 999999
-        : plan.features.rendersPerMonth -
-            subscription.rendersUsedThisPeriod
+        : entitlements.rendersPerMonth - subscription.rendersUsedThisPeriod
     );
 
     // Human-readable message
     let message = "";
-    if (!isActive) {
-      message = `${plan.name} plan: ${subscription.status}. Downgraded to Free.`;
-    } else if (plan.features.rendersPerMonth >= 999999) {
+    if (!isBillingLive()) {
+      message = "Free plan only (billing not active yet)";
+    } else if (entitlements.rendersPerMonth >= 999999) {
       message = `${plan.name} plan: Unlimited renders`;
     } else {
-      message = `${plan.name} plan: ${rendersRemaining}/${plan.features.rendersPerMonth} renders left this period`;
+      message = `${plan.name} plan: ${rendersRemaining}/${entitlements.rendersPerMonth} renders left this period`;
     }
 
     return NextResponse.json({
       ok: true,
       userId,
-      planId: isActive ? subscription.planId : "free",
+      billingLive: isBillingLive(),
+      planId: entitlements.planId,
       subscriptionStatus: subscription.status,
       rendersUsedThisPeriod: subscription.rendersUsedThisPeriod,
       rendersRemaining,
-      maxVideoMinutes: plan.features.maxVideoLengthMinutes,
-      maxExportQuality: plan.features.exportQuality,
-      watermarkRequired: plan.features.hasWatermark,
-      queuePriority: plan.features.queuePriority,
+      maxVideoMinutes: entitlements.maxVideoLengthMinutes,
+      maxExportQuality: entitlements.exportQuality,
+      watermarkRequired: entitlements.hasWatermark,
+      queuePriority: entitlements.queuePriority,
       periodStartUnix: subscription.currentPeriodStart,
       periodEndUnix: subscription.currentPeriodEnd,
       periodEndDate: new Date(

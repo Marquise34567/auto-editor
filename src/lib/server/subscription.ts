@@ -147,6 +147,116 @@ export async function updateUserSubscription(
 }
 
 /**
+ * Check if billing is live (server-side only).
+ * Returns true only if BILLING_LIVE is explicitly set to "true".
+ */
+export function isBillingLive(): boolean {
+  return process.env.BILLING_LIVE === "true";
+}
+
+/**
+ * Plan Entitlements - What features does this plan allow?
+ */
+export interface PlanEntitlements {
+  planId: PlanId;
+  rendersPerMonth: number;
+  maxVideoLengthMinutes: number;
+  exportQuality: "720p" | "1080p" | "4k";
+  hasWatermark: boolean;
+  queuePriority: "standard" | "priority" | "ultra";
+  canExportWithoutWatermark: boolean;
+}
+
+/**
+ * Get user entitlements based on subscription.
+ * 
+ * CRITICAL BILLING SAFETY:
+ * - If BILLING_LIVE !== "true", ALWAYS return FREE plan
+ * - If subscription.status is not "active" or "trialing", return FREE plan
+ * - Otherwise return plan-based entitlements
+ * 
+ * This is the ONLY source of truth for feature access.
+ */
+export async function getUserEntitlements(userId: string): Promise<PlanEntitlements> {
+  // SAFETY CHECK: If billing is not live, everyone gets FREE
+  if (!isBillingLive()) {
+    return {
+      planId: "free",
+      rendersPerMonth: 10,
+      maxVideoLengthMinutes: 5,
+      exportQuality: "720p",
+      hasWatermark: true,
+      queuePriority: "standard",
+      canExportWithoutWatermark: false,
+    };
+  }
+
+  // Get subscription from store
+  const subscription = await getUserSubscription(userId);
+
+  // If subscription is not active/trialing, downgrade to FREE
+  const isActive =
+    subscription.status === "active" || subscription.status === "trialing";
+  
+  if (!isActive || subscription.planId === "free") {
+    return {
+      planId: "free",
+      rendersPerMonth: 10,
+      maxVideoLengthMinutes: 5,
+      exportQuality: "720p",
+      hasWatermark: true,
+      queuePriority: "standard",
+      canExportWithoutWatermark: false,
+    };
+  }
+
+  // Return entitlements based on actual plan
+  switch (subscription.planId) {
+    case "starter":
+      return {
+        planId: "starter",
+        rendersPerMonth: 50,
+        maxVideoLengthMinutes: 15,
+        exportQuality: "1080p",
+        hasWatermark: false,
+        queuePriority: "standard",
+        canExportWithoutWatermark: true,
+      };
+    case "creator":
+      return {
+        planId: "creator",
+        rendersPerMonth: 200,
+        maxVideoLengthMinutes: 30,
+        exportQuality: "4k",
+        hasWatermark: false,
+        queuePriority: "priority",
+        canExportWithoutWatermark: true,
+      };
+    case "studio":
+      return {
+        planId: "studio",
+        rendersPerMonth: 999999, // Unlimited
+        maxVideoLengthMinutes: 120,
+        exportQuality: "4k",
+        hasWatermark: false,
+        queuePriority: "ultra",
+        canExportWithoutWatermark: true,
+      };
+    default:
+      // Fallback to FREE
+      return {
+        planId: "free",
+        rendersPerMonth: 10,
+        maxVideoLengthMinutes: 5,
+        exportQuality: "720p",
+        hasWatermark: true,
+        queuePriority: "standard",
+        canExportWithoutWatermark: false,
+      };
+  }
+}
+
+/**
  * Increment render usage for current period.
  * Only called after successful render completion.
  * Atomic operation (in production, use DB transaction).

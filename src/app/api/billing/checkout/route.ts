@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateReturnTo } from '@/lib/client/returnTo';
 import type { PlanId } from '@/config/plans';
+import { isBillingLive } from '@/lib/server/subscription';
 
 export const runtime = 'nodejs';
 
@@ -24,6 +25,18 @@ export const runtime = 'nodejs';
  */
 export async function POST(request: NextRequest) {
   try {
+    // CRITICAL SAFETY: Block checkout if billing is not live
+    if (!isBillingLive()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "BILLING_DISABLED",
+          error: "Billing is not active yet. No charges will be made.",
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { planId, billingCycle, returnTo } = body;
 
