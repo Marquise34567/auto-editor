@@ -192,27 +192,19 @@ export interface PlanEntitlements {
 /**
  * Get user entitlements based on subscription.
  * 
- * CRITICAL BILLING SAFETY:
- * - If BILLING_LIVE !== "true", ALWAYS return FREE plan
- * - If subscription is not active, return FREE plan
- * - Otherwise return plan-based entitlements
+/**
+ * ENTITLEMENTS (What features does this user have?)
+ * Query the database to determine what the user can do
+ * ALWAYS returns either a valid plan or FREE (never throws)
  * 
  * This is the ONLY source of truth for feature access.
+ * 
+ * In production with real Stripe:
+ * - Subscriptions are activated by webhooks
+ * - Inactive/free subscriptions automatically downgrade to FREE plan
+ * - Features are locked by Stripe status, not by environment flags
  */
 export async function getUserEntitlements(userId: string): Promise<PlanEntitlements> {
-  // SAFETY CHECK: If billing is not live, everyone gets FREE
-  if (!isBillingLive()) {
-    return {
-      planId: "free",
-      rendersPerMonth: 10,
-      maxVideoLengthMinutes: 5,
-      exportQuality: "720p",
-      hasWatermark: true,
-      queuePriority: "standard",
-      canExportWithoutWatermark: false,
-    };
-  }
-
   // Get subscription from database
   const subscription = await getUserSubscription(userId);
 

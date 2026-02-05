@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserSubscription, getDemoUserId, getUserEntitlements, isBillingLive } from "@/lib/server/subscription";
+import { getUserSubscription, getDemoUserId, getUserEntitlements } from "@/lib/server/subscription";
 import { getPlan } from "@/config/plans";
 
 export const runtime = "nodejs";
@@ -64,8 +64,6 @@ export async function GET(request: Request) {
     if (subscription.status === 'pending_activation' && subscription.providerSubscriptionId) {
       isPending = true;
       message = "Payment received — activation pending (webhook verification required)";
-    } else if (!isBillingLive()) {
-      message = "Free plan only (billing not active yet)";
     } else if (entitlements.rendersPerMonth >= 999999) {
       message = `${plan.name} plan: Unlimited renders`;
     } else {
@@ -75,8 +73,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       userId,
-      billingLive: isBillingLive(),
-      isPending, // NEW: Indicates pending verification state
+      isPending, // Indicates pending verification state
       planId: entitlements.planId,
       subscriptionStatus: subscription.status,
       rendersUsedThisPeriod: subscription.rendersUsedThisPeriod,
