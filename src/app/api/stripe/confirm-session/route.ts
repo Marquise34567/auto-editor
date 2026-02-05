@@ -10,16 +10,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getBillingConfig, isBillingEnabled } from '@/lib/billing/config';
-import Stripe from 'stripe';
+import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
 
 export const runtime = 'nodejs';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
-});
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate Stripe configuration
+    if (!isStripeConfigured()) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured on the server' },
+        { status: 500 }
+      );
+    }
+
+    const stripe = getStripe();
+
     const billingConfig = getBillingConfig();
 
     // Check if billing is enabled

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic';
+
 
 /**
  * Stripe Webhook Handler
@@ -66,14 +68,15 @@ export async function POST(request: NextRequest) {
 /**
  * REFERENCE IMPLEMENTATION (uncomment when ready)
  * 
-import Stripe from 'stripe'
-import { createSupabaseServerClient } from '@/lib/supabaseServer'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+import Stripe from 'stripe';
+import { getStripe } from '@/lib/stripe/server';
+import { createSupabaseServerClient } from '@/lib/supabaseServer';
 
 export async function POST(request: NextRequest) {
   try {
+      const stripe = getStripe();
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
     const body = await request.text()
     const signature = request.headers.get('stripe-signature')!
 

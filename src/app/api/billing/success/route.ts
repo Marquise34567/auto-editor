@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
 import { updateUserSubscription } from '@/lib/server/subscription';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/billing/success
@@ -18,6 +19,14 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   try {
+        // Validate Stripe configuration
+        if (!isStripeConfigured()) {
+          const returnTo = request.nextUrl.searchParams.get('returnTo') || '/editor';
+          return NextResponse.redirect(new URL(`${returnTo}?error=stripe_not_configured`, request.url));
+        }
+
+        const stripe = getStripe();
+
     const sessionId = request.nextUrl.searchParams.get('session_id');
     const returnTo = request.nextUrl.searchParams.get('returnTo') || '/editor';
 

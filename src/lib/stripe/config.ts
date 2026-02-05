@@ -1,18 +1,8 @@
 /**
  * Stripe Configuration
  * 
- * Centralized Stripe setup and price lookup keys.
+ * Centralized Stripe price lookup keys.
  */
-
-import Stripe from 'stripe';
-
-// Allow missing key during build time, but require at runtime
-const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_missing_key';
-
-export const stripe = new Stripe(stripeKey, {
-  apiVersion: '2026-01-28.clover',
-  typescript: true,
-});
 
 /**
  * Stripe Price Lookup Keys

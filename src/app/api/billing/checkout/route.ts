@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
 import { getDemoUserId } from '@/lib/server/subscription';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/billing/checkout
@@ -17,6 +18,16 @@ export const runtime = 'nodejs';
  */
 export async function POST(request: NextRequest) {
   try {
+        // Validate Stripe configuration
+        if (!isStripeConfigured()) {
+          return NextResponse.json(
+            { error: 'Stripe is not configured on the server' },
+            { status: 500 }
+          );
+        }
+
+        const stripe = getStripe();
+
     const body = await request.json();
     const { priceId, returnTo } = body as { priceId: string; returnTo?: string };
 

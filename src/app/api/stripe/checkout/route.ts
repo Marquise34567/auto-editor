@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe, isStripeConfigured } from '@/lib/stripe/server'
 import { requireUserServer } from '@/lib/auth'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
+export const dynamic = 'force-dynamic';
+
 
 /**
  * Stripe Checkout Session Creation
@@ -13,6 +15,16 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer'
  */
 export async function POST(request: NextRequest) {
   try {
+        // Validate Stripe configuration
+        if (!isStripeConfigured()) {
+          return NextResponse.json(
+            { error: 'Stripe is not configured on the server' },
+            { status: 500 }
+          );
+        }
+
+        const stripe = getStripe();
+
     // Require authentication
     const user = await requireUserServer()
 
