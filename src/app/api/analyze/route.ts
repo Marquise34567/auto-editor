@@ -419,7 +419,7 @@ export async function POST(request: Request) {
       candidates: scored,
       status: "ENHANCING_AUDIO",
       stage: "Enhancing audio",
-      message: "Preparing sound enhancements",
+      message: "Preparing for final render",
       details: {
         chosenStart,
         chosenEnd,
@@ -431,20 +431,8 @@ export async function POST(request: Request) {
     appendJobLog(jobId, `Analyzed ${originalFileName || path.basename(inputPath)}`);
     appendJobLog(jobId, `Duration ${metadata.duration.toFixed(2)}s`);
 
-    updateJob(jobId, {
-      status: "RENDERING_DRAFT",
-      stage: "Draft render",
-      message: "Building preview",
-    });
-
     console.log("=== Analyze complete, READY FOR GENERATE ===");
     console.log("Job analysis done. Waiting for generate phase.");
-    
-    updateJob(jobId, {
-      status: "ENHANCING_AUDIO",
-      stage: "Audio enhancement",
-      message: "Preparing for final render",
-    });
 
     return NextResponse.json({
       jobId: job.id,
