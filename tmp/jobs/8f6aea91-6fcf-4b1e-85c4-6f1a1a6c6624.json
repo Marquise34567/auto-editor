@@ -1,0 +1,31 @@
+{
+  "id": "8f6aea91-6fcf-4b1e-85c4-6f1a1a6c6624",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\8f6aea91-6fcf-4b1e-85c4-6f1a1a6c6624-2025-10-23_16-28-42.mkv",
+  "createdAt": 1770230253597,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Full video processed successfully",
+  "logs": [
+    "Uploaded 2025-10-23 16-28-42.mkv",
+    "Analyzed 2025-10-23 16-28-42.mkv",
+    "Duration 0.00s",
+    "Starting full video render...",
+    "✓ Final render complete: 470.67MB"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Audio enhancement",
+      "Full-video processing"
+    ]
+  },
+  "finalUrl": "/outputs/8f6aea91-6fcf-4b1e-85c4-6f1a1a6c6624/final.mp4",
+  "outputPath": "C:\\Users\\Quise\\Downloads\\auto-editor\\public\\outputs\\8f6aea91-6fcf-4b1e-85c4-6f1a1a6c6624\\final.mp4",
+  "outputUrl": "/outputs/8f6aea91-6fcf-4b1e-85c4-6f1a1a6c6624/final.mp4"
+}

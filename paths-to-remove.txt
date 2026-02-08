@@ -1,0 +1,8 @@
+firebase-adminsdk.json
+*service-account*.json
+firebase-adminsdk*.json
+*.pem
+*.key
+google-credentials*
+.env.local
+.env.production

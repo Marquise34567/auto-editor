@@ -1,0 +1,1 @@
+{"ok":false,"code":"missing_env","message":"Server misconfiguration: required env vars missing","details":{"missing":["FIREBASE_PROJECT_ID","FIREBASE_CLIENT_EMAIL","FIREBASE_PRIVATE_KEY","STORAGE_BUCKET"]},"requestId":"6f9f5626-b389-478f-b665-f50faf651e02"}

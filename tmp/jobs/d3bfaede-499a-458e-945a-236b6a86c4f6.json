@@ -1,0 +1,29 @@
+{
+  "id": "d3bfaede-499a-458e-945a-236b6a86c4f6",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\d3bfaede-499a-458e-945a-236b6a86c4f6-2025-10-20_12-24-51.mkv",
+  "createdAt": 1770220450204,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "FAILED",
+  "stage": "Failed",
+  "message": "Analyze failed",
+  "logs": [
+    "Uploaded 2025-10-20 12-24-51.mkv",
+    "Analyzed 2025-10-20 12-24-51.mkv",
+    "Duration 0.00s",
+    "Failed: Error: spawn \\ROOT\\node_modules\\ffmpeg-static\\ffmpeg.exe ENOENT"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  },
+  "error": "Error: spawn \\ROOT\\node_modules\\ffmpeg-static\\ffmpeg.exe ENOENT"
+}

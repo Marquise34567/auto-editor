@@ -1,0 +1,14 @@
+{
+  "id": "901de9c5-37d4-4853-8037-dd6ef0289717",
+  "phase": "ANALYZING",
+  "statusMessage": "Uploaded — analyzing",
+  "createdAt": 1770456189632,
+  "updatedAt": 1770456189632,
+  "bucketPath": "uploads/check-finalize.mkv",
+  "progress": {
+    "overallProgress": 0.01,
+    "overallEtaSec": 5,
+    "phaseProgress": {}
+  },
+  "needsNormalize": true
+}

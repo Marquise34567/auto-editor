@@ -1,0 +1,28 @@
+{
+  "id": "9bb3eb09-60d1-4daa-8860-4684151a410a",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\9bb3eb09-60d1-4daa-8860-4684151a410a-2025-10-20_12-08-25.mkv",
+  "createdAt": 1770230013832,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "RENDERING_FINAL",
+  "stage": "Rendering",
+  "message": "Processing full video with enhancements",
+  "logs": [
+    "Uploaded 2025-10-20 12-08-25.mkv",
+    "Analyzed 2025-10-20 12-08-25.mkv",
+    "Duration 0.00s",
+    "Starting full video render..."
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  }
+}

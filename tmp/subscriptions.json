@@ -1,0 +1,12 @@
+{
+  "demo-user-default": {
+    "userId": "demo-user-default",
+    "planId": "free",
+    "provider": "none",
+    "status": "active",
+    "currentPeriodStart": 1770244396,
+    "currentPeriodEnd": 1772836396,
+    "rendersUsedThisPeriod": 0,
+    "updatedAt": 1770244396
+  }
+}

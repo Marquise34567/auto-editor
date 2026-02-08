@@ -1,0 +1,29 @@
+{
+  "id": "b2c52d29-d058-4ede-9809-dfd4be78e0b3",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\selftest\\test.mp4",
+  "createdAt": 1770224246776,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Final render complete",
+  "logs": [
+    "Uploaded test.mp4",
+    "Analyzed test.mp4",
+    "Duration 0.00s"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  },
+  "draftUrl": "/outputs/b2c52d29-d058-4ede-9809-dfd4be78e0b3/draft.mp4",
+  "finalUrl": "/outputs/b2c52d29-d058-4ede-9809-dfd4be78e0b3/final.mp4"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "71c7e3dc-dcd4-4a2d-9bdf-29eebf81b070",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\71c7e3dc-dcd4-4a2d-9bdf-29eebf81b070-2025-10-20_12-31-15.mkv",
+  "createdAt": 1770237657321,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "FAILED",
+  "stage": "Failed",
+  "message": "EDL application failed: Output file too small",
+  "logs": [
+    "Uploaded 2025-10-20 12-31-15.mkv",
+    "Warning: Invalid hook timing",
+    "Warning: No meaningful edits: hook is from start and less than 3 seconds removed",
+    "Analyzed 2025-10-20 12-31-15.mkv",
+    "Duration 0.00s",
+    "Starting full video render...",
+    "EDL application failed: Output file too small\nDetails: Output is 0.27MB, expected >5MB",
+    "Starting full video render...",
+    "EDL application failed: Output file too small\nDetails: Output is 0.27MB, expected >5MB"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Hook from 0.0s",
+      "Removed 0.0s",
+      "0 high-value segments kept"
+    ],
+    "edl": {
+      "version": 1,
+      "hook": {
+        "start": 0,
+        "end": 0,
+        "reason": "Video too short"
+      },
+      "segments": [],
+      "notes": "Video shorter than 5 seconds, no edits applied",
+      "expectedChange": {
+        "originalDurationSec": 0,
+        "finalDurationSec": 0,
+        "totalRemovedSec": 0
+      }
+    }
+  },
+  "error": "EDL application failed: Output file too small"
+}

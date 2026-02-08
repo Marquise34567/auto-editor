@@ -1,0 +1,47 @@
+{
+  "id": "e5127dc4-9d16-47c0-b652-195a271cf5a4",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\1c371dfd-8cc9-4354-a41a-604562a32b6a-2025-10-20_12-31-15.mkv",
+  "createdAt": 1770236382960,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "FAILED",
+  "stage": "Failed",
+  "message": "EDL application failed: Command failed with code 4294967274",
+  "logs": [
+    "Uploaded 1c371dfd-8cc9-4354-a41a-604562a32b6a-2025-10-20_12-31-15.mkv",
+    "Warning: Invalid hook timing",
+    "Warning: No meaningful edits: hook is from start and less than 3 seconds removed",
+    "Analyzed 1c371dfd-8cc9-4354-a41a-604562a32b6a-2025-10-20_12-31-15.mkv",
+    "Duration 0.00s",
+    "Starting full video render...",
+    "EDL application failed: Command failed with code 4294967274"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Hook from 0.0s",
+      "Removed 0.0s",
+      "0 high-value segments kept"
+    ],
+    "edl": {
+      "version": 1,
+      "hook": {
+        "start": 0,
+        "end": 0,
+        "reason": "Video too short"
+      },
+      "segments": [],
+      "notes": "Video shorter than 5 seconds, no edits applied",
+      "expectedChange": {
+        "originalDurationSec": 0,
+        "finalDurationSec": 0,
+        "totalRemovedSec": 0
+      }
+    }
+  },
+  "error": "EDL application failed: Command failed with code 4294967274"
+}

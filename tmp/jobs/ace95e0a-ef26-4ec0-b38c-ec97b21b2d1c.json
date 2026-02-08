@@ -1,0 +1,28 @@
+{
+  "id": "ace95e0a-ef26-4ec0-b38c-ec97b21b2d1c",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\ace95e0a-ef26-4ec0-b38c-ec97b21b2d1c-2025-10-20_12-24-51.mkv",
+  "createdAt": 1770189581672,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "ready",
+  "logs": [
+    "Analyzed 2025-10-20 12-24-51.mkv",
+    "Duration 0.00s",
+    "Rendering vertical clips",
+    "Render complete",
+    "Rendering vertical clips",
+    "Render complete",
+    "Rendering vertical clips",
+    "Render complete",
+    "Rendering vertical clips",
+    "Render complete",
+    "Rendering vertical clips",
+    "Render complete",
+    "Rendering vertical clips",
+    "Render complete",
+    "Rendering vertical clips",
+    "Render complete"
+  ]
+}
