@@ -1,0 +1,29 @@
+{
+  "id": "d912bf77-624c-44c5-b646-909b0ed5f540",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\d912bf77-624c-44c5-b646-909b0ed5f540-2025-10-20_12-24-51.mkv",
+  "createdAt": 1770220988089,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "FAILED",
+  "stage": "Failed",
+  "message": "Analyze failed",
+  "logs": [
+    "Uploaded 2025-10-20 12-24-51.mkv",
+    "Analyzed 2025-10-20 12-24-51.mkv",
+    "Duration 0.00s",
+    "Failed: Error: Command failed with code 4294967274"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  },
+  "error": "Error: Command failed with code 4294967274"
+}

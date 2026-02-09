@@ -1,0 +1,29 @@
+{
+  "id": "568f4e90-b86c-4a1b-8124-173c15c2aa1a",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\568f4e90-b86c-4a1b-8124-173c15c2aa1a-2025-10-20_12-08-25.mkv",
+  "createdAt": 1770224313508,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Final render complete",
+  "logs": [
+    "Uploaded 2025-10-20 12-08-25.mkv",
+    "Analyzed 2025-10-20 12-08-25.mkv",
+    "Duration 0.00s"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  },
+  "draftUrl": "/outputs/568f4e90-b86c-4a1b-8124-173c15c2aa1a/draft.mp4",
+  "finalUrl": "/outputs/568f4e90-b86c-4a1b-8124-173c15c2aa1a/final.mp4"
+}

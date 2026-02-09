@@ -1,0 +1,15 @@
+{
+  "id": "15f7c6d4-b665-4d3e-9f1b-849155857949",
+  "filePath": "r2ATWTXPN8U48PxiwRIaqcLrs1p1/1770600651787-e68e42d1/2025-10-20_11-56-45.mkv",
+  "createdAt": 1770600652857,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "QUEUED",
+  "stage": "Queued",
+  "message": "Upload complete",
+  "logs": [
+    "Created job for r2ATWTXPN8U48PxiwRIaqcLrs1p1/1770600651787-e68e42d1/2025-10-20_11-56-45.mkv"
+  ]
+}

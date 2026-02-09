@@ -1,0 +1,51 @@
+{
+  "id": "23f2fe89-c100-4d42-9855-4d995c713481",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor-c93f152cd5f9870dc38c62feb299a85919e1c212\\auto-editor-c93f152cd5f9870dc38c62feb299a85919e1c212\\tmp\\selftest.mp4",
+  "createdAt": 1770610542193,
+  "duration": 8,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "ENHANCING_AUDIO",
+  "stage": "Audio enhancement",
+  "message": "Preparing for final render",
+  "logs": [
+    "Uploaded selftest.mp4",
+    "Warning: No meaningful edits: removed duration below threshold",
+    "Warning: No meaningful edits: fewer than 2 segments",
+    "Analyzed selftest.mp4",
+    "Duration 8.00s"
+  ],
+  "details": {
+    "chosenStart": 0.8,
+    "chosenEnd": 3.3,
+    "hookStart": 0.8,
+    "improvements": [
+      "Hook from 0.8s",
+      "Removed 1.0s",
+      "1 high-value segments kept"
+    ],
+    "edl": {
+      "version": 1,
+      "hook": {
+        "start": 0.8,
+        "end": 3.3,
+        "reason": "Auto-rewrite hook from 0.8s"
+      },
+      "segments": [
+        {
+          "start": 3.3,
+          "end": 7.8,
+          "reason": "Post-hook context",
+          "score": 0.6
+        }
+      ],
+      "notes": "Auto-rewrite for meaningful edits (kept 7.0s)",
+      "expectedChange": {
+        "originalDurationSec": 8,
+        "finalDurationSec": 7,
+        "totalRemovedSec": 1
+      }
+    }
+  }
+}

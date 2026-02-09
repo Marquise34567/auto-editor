@@ -1,0 +1,170 @@
+{
+  "id": "ca15982e-1510-4dbe-bdec-5ecde5ee9ecf",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\ca15982e-1510-4dbe-bdec-5ecde5ee9ecf-2025-10-20_12-31-15.mkv",
+  "createdAt": 1770239312249,
+  "duration": 143.31,
+  "transcript": [],
+  "candidates": [
+    {
+      "id": "30-0.00",
+      "start": 0,
+      "end": 30,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 44,
+      "silenceRatio": 0.3586493333333331,
+      "speechDensity": 0.6,
+      "energy": 64,
+      "hookSignals": []
+    },
+    {
+      "id": "30-15.00",
+      "start": 15,
+      "end": 45,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 46,
+      "silenceRatio": 0.32571246666666653,
+      "speechDensity": 0.6,
+      "energy": 67,
+      "hookSignals": []
+    },
+    {
+      "id": "30-30.00",
+      "start": 30,
+      "end": 60,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 42,
+      "silenceRatio": 0.4092472000000003,
+      "speechDensity": 0.6,
+      "energy": 59,
+      "hookSignals": []
+    },
+    {
+      "id": "30-45.00",
+      "start": 45,
+      "end": 75,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 40,
+      "silenceRatio": 0.438385399999999,
+      "speechDensity": 0.6,
+      "energy": 56,
+      "hookSignals": []
+    },
+    {
+      "id": "30-60.00",
+      "start": 60,
+      "end": 90,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 44,
+      "silenceRatio": 0.3609569999999993,
+      "speechDensity": 0.6,
+      "energy": 64,
+      "hookSignals": []
+    },
+    {
+      "id": "30-75.00",
+      "start": 75,
+      "end": 105,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 49,
+      "silenceRatio": 0.26748273333333356,
+      "speechDensity": 0.6,
+      "energy": 73,
+      "hookSignals": []
+    },
+    {
+      "id": "30-90.00",
+      "start": 90,
+      "end": 120,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 56,
+      "silenceRatio": 0.12561043333333308,
+      "speechDensity": 0.6,
+      "energy": 87,
+      "hookSignals": []
+    },
+    {
+      "id": "30-105.00",
+      "start": 105,
+      "end": 135,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 51,
+      "silenceRatio": 0.2299027666666665,
+      "speechDensity": 0.6,
+      "energy": 77,
+      "hookSignals": []
+    }
+  ],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Edited video ready (removed 107.2s)",
+  "logs": [
+    "Uploaded 2025-10-20 12-31-15.mkv",
+    "Analyzed 2025-10-20 12-31-15.mkv",
+    "Duration 143.31s",
+    "Starting full video render...",
+    "EDL used: {\"version\":1,\"hook\":{\"start\":19.331,\"end\":21.831,\"reason\":\"Auto-rewrite hook from 19.3s\"},\"segments\":[{\"start\":0,\"end\":6,\"score\":0.485,\"reason\":\"Acceptable content\"},{\"start\":21.831,\"end\":49.158500000000004,\"reason\":\"Extended for minimum length\",\"score\":0.6}],\"notes\":\"Auto-rewrite for meaningful edits (kept 13.0s)\",\"expectedChange\":{\"originalDurationSec\":143.31,\"finalDurationSec\":13,\"totalRemovedSec\":130.31}}",
+    "✓ Final render complete: 26.32MB",
+    "✓ Removed 107.2s, final 36.1s"
+  ],
+  "details": {
+    "chosenStart": 19.331000000000003,
+    "chosenEnd": 21.831000000000003,
+    "hookStart": 19.331000000000003,
+    "improvements": [
+      "Hook from 19.3s",
+      "Removed 107.2s of 143.3s",
+      "Final duration: 36.1s",
+      "2 segments kept"
+    ],
+    "edl": {
+      "version": 1,
+      "hook": {
+        "start": 19.331,
+        "end": 21.831,
+        "reason": "Auto-rewrite hook from 19.3s"
+      },
+      "segments": [
+        {
+          "start": 0,
+          "end": 6,
+          "score": 0.485,
+          "reason": "Acceptable content"
+        },
+        {
+          "start": 21.831,
+          "end": 49.158500000000004,
+          "reason": "Extended for minimum length",
+          "score": 0.6
+        }
+      ],
+      "notes": "Auto-rewrite for meaningful edits (kept 13.0s)",
+      "expectedChange": {
+        "originalDurationSec": 143.31,
+        "finalDurationSec": 13,
+        "totalRemovedSec": 130.31
+      }
+    },
+    "editsApplied": {
+      "originalDurationSec": 143.31,
+      "finalDurationSec": 36.136417,
+      "removedSec": 107.17358300000001,
+      "hook": {
+        "start": 19.331,
+        "end": 21.831
+      },
+      "segmentCount": 2
+    }
+  },
+  "finalUrl": "/outputs/ca15982e-1510-4dbe-bdec-5ecde5ee9ecf/final_ca15982e-1510-4dbe-bdec-5ecde5ee9ecf_a44b31b2-0438-441c-a070-c0c7c931008d.mp4?v=1770239337133",
+  "outputPath": "C:\\Users\\Quise\\Downloads\\auto-editor\\public\\outputs\\ca15982e-1510-4dbe-bdec-5ecde5ee9ecf\\final_ca15982e-1510-4dbe-bdec-5ecde5ee9ecf_a44b31b2-0438-441c-a070-c0c7c931008d.mp4",
+  "outputUrl": "/outputs/ca15982e-1510-4dbe-bdec-5ecde5ee9ecf/final_ca15982e-1510-4dbe-bdec-5ecde5ee9ecf_a44b31b2-0438-441c-a070-c0c7c931008d.mp4?v=1770239337133"
+}

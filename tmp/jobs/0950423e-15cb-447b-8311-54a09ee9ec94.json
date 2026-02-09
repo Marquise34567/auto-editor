@@ -1,0 +1,56 @@
+{
+  "id": "0950423e-15cb-447b-8311-54a09ee9ec94",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\0950423e-15cb-447b-8311-54a09ee9ec94-2025-10-22_02-23-54.mkv",
+  "createdAt": 1770367345662,
+  "duration": 15.015,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "ENHANCING_AUDIO",
+  "stage": "Audio enhancement",
+  "message": "Preparing for final render",
+  "logs": [
+    "Uploaded 2025-10-22_02-23-54.mkv",
+    "Warning: No meaningful edits: hook not moved from later in the video",
+    "Analyzed 2025-10-22_02-23-54.mkv",
+    "Duration 15.02s"
+  ],
+  "details": {
+    "chosenStart": 1.5015,
+    "chosenEnd": 4.0015,
+    "hookStart": 1.5015,
+    "improvements": [
+      "Hook from 1.5s",
+      "Removed 4.5s",
+      "2 high-value segments kept"
+    ],
+    "edl": {
+      "version": 1,
+      "hook": {
+        "start": 1.5015,
+        "end": 4.0015,
+        "reason": "Auto-rewrite hook from 1.5s"
+      },
+      "segments": [
+        {
+          "start": 4.0015,
+          "end": 8.5015,
+          "reason": "Post-hook context",
+          "score": 0.6
+        },
+        {
+          "start": 9.015,
+          "end": 12.515,
+          "reason": "Fallback energetic segment",
+          "score": 0.4
+        }
+      ],
+      "notes": "Auto-rewrite for meaningful edits (kept 10.5s)",
+      "expectedChange": {
+        "originalDurationSec": 15.015,
+        "finalDurationSec": 10.5,
+        "totalRemovedSec": 4.515000000000001
+      }
+    }
+  }
+}

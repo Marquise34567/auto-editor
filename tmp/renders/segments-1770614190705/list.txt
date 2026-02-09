@@ -1,0 +1,2 @@
+file 'C:\Users\Quise\Downloads\auto-editor-c93f152cd5f9870dc38c62feb299a85919e1c212\auto-editor-c93f152cd5f9870dc38c62feb299a85919e1c212\tmp\renders\segments-1770614190705\seg-hook.mp4'
+file 'C:\Users\Quise\Downloads\auto-editor-c93f152cd5f9870dc38c62feb299a85919e1c212\auto-editor-c93f152cd5f9870dc38c62feb299a85919e1c212\tmp\renders\segments-1770614190705\seg-0.mp4'

@@ -1,0 +1,16 @@
+{
+  "id": "f504706d-9434-425c-91f7-cf91c93f654f",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\f504706d-9434-425c-91f7-cf91c93f654f-2025-10-22_02-23-54.mkv",
+  "createdAt": 1770190585049,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "ready",
+  "logs": [
+    "Analyzed 2025-10-22 02-23-54.mkv",
+    "Duration 0.00s",
+    "Rendering vertical clips",
+    "Render complete"
+  ]
+}

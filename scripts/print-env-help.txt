@@ -1,0 +1,13 @@
+Firebase Admin setup (single JSON env var)
+
+1) In Firebase Console: Project settings -> Service accounts -> Firebase Admin SDK
+2) Click Generate new private key
+3) Open the downloaded JSON file
+4) Paste it into .env.local as a single line:
+
+FIREBASE_SERVICE_ACCOUNT='{"type":"service_account",...}'
+
+Notes:
+- Use single quotes in .env.local to avoid escaping issues on Windows.
+- Keep the JSON on one line.
+- Restart the dev server after saving .env.local.

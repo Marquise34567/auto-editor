@@ -1,0 +1,29 @@
+{
+  "id": "69e40e82-fb58-404b-8f6d-f3412fdf5f0a",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\selftest\\test.mp4",
+  "createdAt": 1770224224401,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "FAILED",
+  "stage": "Failed",
+  "message": "Analyze failed",
+  "logs": [
+    "Uploaded test.mp4",
+    "Analyzed test.mp4",
+    "Duration 0.00s",
+    "Failed: Command failed with code 4294967274"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  },
+  "error": "Command failed with code 4294967274"
+}

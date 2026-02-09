@@ -1,0 +1,14 @@
+{
+  "id": "16fc57df-0588-4270-aef5-bfd453bf1969",
+  "phase": "ANALYZING",
+  "statusMessage": "Uploaded — analyzing",
+  "createdAt": 1770455716118,
+  "updatedAt": 1770455716118,
+  "bucketPath": "uploads/yeEBLQtGAqe2g7LnUdKPg7xFTpk1/1770455712424/2025-10-20_11-56-56.mkv",
+  "progress": {
+    "overallProgress": 0.01,
+    "overallEtaSec": 5,
+    "phaseProgress": {}
+  },
+  "needsNormalize": true
+}

@@ -1,0 +1,31 @@
+{
+  "id": "515e7545-4f6f-4464-b352-8af5feb7b56c",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\515e7545-4f6f-4464-b352-8af5feb7b56c-2025-10-20_12-31-15.mkv",
+  "createdAt": 1770226475513,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Final render complete",
+  "logs": [
+    "Uploaded 2025-10-20 12-31-15.mkv",
+    "Analyzed 2025-10-20 12-31-15.mkv",
+    "Duration 0.00s"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Trimmed weak intro",
+      "Removed long pauses",
+      "Prioritized high-energy moments"
+    ]
+  },
+  "draftUrl": "/outputs/515e7545-4f6f-4464-b352-8af5feb7b56c/draft.mp4",
+  "finalUrl": "/outputs/515e7545-4f6f-4464-b352-8af5feb7b56c/final.mp4",
+  "outputPath": "C:\\Users\\Quise\\Downloads\\auto-editor\\public\\outputs\\515e7545-4f6f-4464-b352-8af5feb7b56c\\final.mp4",
+  "outputUrl": "/api/video?jobId=515e7545-4f6f-4464-b352-8af5feb7b56c&kind=final"
+}

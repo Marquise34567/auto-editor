@@ -1,0 +1,49 @@
+{
+  "phase": "ANALYZING",
+  "statusMessage": "Analyzing video...",
+  "createdAt": 1770417646154,
+  "startedAt": 1770417646154,
+  "updatedAt": 1770417646154,
+  "durationSec": null,
+  "fps": null,
+  "width": null,
+  "height": null,
+  "progress": {
+    "overallProgress": 0.01,
+    "overallEtaSec": 31,
+    "phaseProgress": {
+      "analyzing": 0.03
+    }
+  },
+  "analyzing": {
+    "subProgress": {
+      "soundEnhance": 0,
+      "hookSelect": 0,
+      "bestMoments": 0
+    },
+    "milestones": {
+      "soundEnhancePlan": false,
+      "hookDraft": false,
+      "bestMomentsDraft": false
+    }
+  },
+  "outputs": {
+    "previewUrl": null,
+    "finalUrl": null
+  },
+  "bucketPath": "uploads/EU5gDhDguiSFVGwYwRWsterwdhD2/1770417488253/test-video.mp4",
+  "debug": {
+    "estimatedTotalSec": 30.94,
+    "tAnalysis": 19.5,
+    "tSelect": 1.44,
+    "tRender": 4,
+    "tFinal": 6,
+    "complexity": 1,
+    "systemLoadFactor": 1
+  },
+  "heartbeat": {
+    "workerLastSeenAt": 0,
+    "lastUpdateAt": 1770417646154
+  },
+  "completedSteps": []
+}

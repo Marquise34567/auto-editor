@@ -1,0 +1,236 @@
+{
+  "id": "656e8efa-d853-4150-a1ad-fa011bbaadb9",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\656e8efa-d853-4150-a1ad-fa011bbaadb9-2025-10-20_12-31-15.mkv",
+  "createdAt": 1770241508545,
+  "duration": 143.31,
+  "transcript": [],
+  "candidates": [
+    {
+      "id": "30-0.00",
+      "start": 0,
+      "end": 30,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 44,
+      "silenceRatio": 0.3586493333333331,
+      "speechDensity": 0.6,
+      "energy": 64,
+      "hookSignals": []
+    },
+    {
+      "id": "30-15.00",
+      "start": 15,
+      "end": 45,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 46,
+      "silenceRatio": 0.32571246666666653,
+      "speechDensity": 0.6,
+      "energy": 67,
+      "hookSignals": []
+    },
+    {
+      "id": "30-30.00",
+      "start": 30,
+      "end": 60,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 42,
+      "silenceRatio": 0.4092472000000003,
+      "speechDensity": 0.6,
+      "energy": 59,
+      "hookSignals": []
+    },
+    {
+      "id": "30-45.00",
+      "start": 45,
+      "end": 75,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 40,
+      "silenceRatio": 0.438385399999999,
+      "speechDensity": 0.6,
+      "energy": 56,
+      "hookSignals": []
+    },
+    {
+      "id": "30-60.00",
+      "start": 60,
+      "end": 90,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 44,
+      "silenceRatio": 0.3609569999999993,
+      "speechDensity": 0.6,
+      "energy": 64,
+      "hookSignals": []
+    },
+    {
+      "id": "30-75.00",
+      "start": 75,
+      "end": 105,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 49,
+      "silenceRatio": 0.26748273333333356,
+      "speechDensity": 0.6,
+      "energy": 73,
+      "hookSignals": []
+    },
+    {
+      "id": "30-90.00",
+      "start": 90,
+      "end": 120,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 56,
+      "silenceRatio": 0.12561043333333308,
+      "speechDensity": 0.6,
+      "energy": 87,
+      "hookSignals": []
+    },
+    {
+      "id": "30-105.00",
+      "start": 105,
+      "end": 135,
+      "duration": 30,
+      "lengthTarget": 30,
+      "score": 51,
+      "silenceRatio": 0.2299027666666665,
+      "speechDensity": 0.6,
+      "energy": 77,
+      "hookSignals": []
+    },
+    {
+      "id": "45-0.00",
+      "start": 0,
+      "end": 45,
+      "duration": 45,
+      "lengthTarget": 45,
+      "score": 46,
+      "silenceRatio": 0.32907035555555547,
+      "speechDensity": 0.6,
+      "energy": 67,
+      "hookSignals": []
+    },
+    {
+      "id": "45-22.00",
+      "start": 22,
+      "end": 67,
+      "duration": 45,
+      "lengthTarget": 45,
+      "score": 45,
+      "silenceRatio": 0.3495846888888888,
+      "speechDensity": 0.6,
+      "energy": 65,
+      "hookSignals": []
+    },
+    {
+      "id": "45-44.00",
+      "start": 44,
+      "end": 89,
+      "duration": 45,
+      "lengthTarget": 45,
+      "score": 40,
+      "silenceRatio": 0.4309782888888885,
+      "speechDensity": 0.6,
+      "energy": 57,
+      "hookSignals": []
+    },
+    {
+      "id": "45-66.00",
+      "start": 66,
+      "end": 111,
+      "duration": 45,
+      "lengthTarget": 45,
+      "score": 48,
+      "silenceRatio": 0.27389171111111066,
+      "speechDensity": 0.6,
+      "energy": 73,
+      "hookSignals": []
+    },
+    {
+      "id": "45-88.00",
+      "start": 88,
+      "end": 133,
+      "duration": 45,
+      "lengthTarget": 45,
+      "score": 53,
+      "silenceRatio": 0.18793795555555576,
+      "speechDensity": 0.6,
+      "energy": 81,
+      "hookSignals": []
+    }
+  ],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Edited video ready (removed 107.4s)",
+  "logs": [
+    "Uploaded 2025-10-20 12-31-15.mkv",
+    "Analyzed 2025-10-20 12-31-15.mkv",
+    "Duration 143.31s",
+    "Starting full video render...",
+    "Render start: 2026-02-04T21:45:14.803Z",
+    "Strategy: single-pass filter_complex concat",
+    "Render end: 2026-02-04T21:45:22.762Z (7.96s)",
+    "EDL used: {\"version\":1,\"hook\":{\"start\":19.331,\"end\":21.831,\"reason\":\"Auto-rewrite hook from 19.3s\"},\"segments\":[{\"start\":0,\"end\":6,\"score\":0.485,\"reason\":\"Acceptable content\"},{\"start\":21.831,\"end\":49.158500000000004,\"reason\":\"Extended for minimum length\",\"score\":0.6}],\"notes\":\"Auto-rewrite for meaningful edits (kept 13.0s)\",\"expectedChange\":{\"originalDurationSec\":143.31,\"finalDurationSec\":35.8275,\"totalRemovedSec\":107.4825}}",
+    "✓ Final render complete: 16.63MB",
+    "✓ Removed 107.4s, final 35.9s"
+  ],
+  "details": {
+    "chosenStart": 19.331000000000003,
+    "chosenEnd": 21.831000000000003,
+    "hookStart": 19.331000000000003,
+    "improvements": [
+      "Hook from 19.3s",
+      "Removed 107.4s of 143.3s",
+      "Final duration: 35.9s",
+      "2 segments kept"
+    ],
+    "edl": {
+      "version": 1,
+      "hook": {
+        "start": 19.331,
+        "end": 21.831,
+        "reason": "Auto-rewrite hook from 19.3s"
+      },
+      "segments": [
+        {
+          "start": 0,
+          "end": 6,
+          "score": 0.485,
+          "reason": "Acceptable content"
+        },
+        {
+          "start": 21.831,
+          "end": 49.158500000000004,
+          "reason": "Extended for minimum length",
+          "score": 0.6
+        }
+      ],
+      "notes": "Auto-rewrite for meaningful edits (kept 13.0s)",
+      "expectedChange": {
+        "originalDurationSec": 143.31,
+        "finalDurationSec": 35.8275,
+        "totalRemovedSec": 107.4825
+      }
+    },
+    "editsApplied": {
+      "originalDurationSec": 143.31,
+      "finalDurationSec": 35.9,
+      "removedSec": 107.41,
+      "hook": {
+        "start": 19.331,
+        "end": 21.831
+      },
+      "segmentCount": 2
+    }
+  },
+  "percent": 100,
+  "progress": 1,
+  "etaSec": 0,
+  "finalUrl": "/outputs/656e8efa-d853-4150-a1ad-fa011bbaadb9/final_656e8efa-d853-4150-a1ad-fa011bbaadb9_186e6c0e-9102-4c9f-bf7c-63187f6867e4.mp4?v=1770241522775",
+  "outputPath": "C:\\Users\\Quise\\Downloads\\auto-editor\\public\\outputs\\656e8efa-d853-4150-a1ad-fa011bbaadb9\\final_656e8efa-d853-4150-a1ad-fa011bbaadb9_186e6c0e-9102-4c9f-bf7c-63187f6867e4.mp4",
+  "outputUrl": "/outputs/656e8efa-d853-4150-a1ad-fa011bbaadb9/final_656e8efa-d853-4150-a1ad-fa011bbaadb9_186e6c0e-9102-4c9f-bf7c-63187f6867e4.mp4?v=1770241522775"
+}

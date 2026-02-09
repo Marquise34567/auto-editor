@@ -1,0 +1,48 @@
+{
+  "id": "1c371dfd-8cc9-4354-a41a-604562a32b6a",
+  "filePath": "C:\\Users\\Quise\\Downloads\\auto-editor\\tmp\\uploads\\1c371dfd-8cc9-4354-a41a-604562a32b6a-2025-10-20_12-31-15.mkv",
+  "createdAt": 1770235676202,
+  "duration": 0,
+  "transcript": [],
+  "candidates": [],
+  "clips": [],
+  "status": "DONE",
+  "stage": "Done",
+  "message": "Full video processed successfully",
+  "logs": [
+    "Uploaded 2025-10-20 12-31-15.mkv",
+    "Analyzed 2025-10-20 12-31-15.mkv",
+    "Duration 0.00s",
+    "Starting full video render...",
+    "✓ Final render complete: 92.99MB"
+  ],
+  "details": {
+    "chosenStart": 0,
+    "chosenEnd": 0,
+    "hookStart": 0,
+    "improvements": [
+      "Retention-first cuts",
+      "Hook-first pacing",
+      "Audio enhancement"
+    ],
+    "retentionPlan": {
+      "hook": {
+        "start": 0,
+        "end": 0,
+        "reason": "Fallback hook (no transcript)"
+      },
+      "segments": [],
+      "stats": {
+        "duration": 0,
+        "keptDuration": 0,
+        "keepRatio": 1,
+        "aggressiveness": "high",
+        "windowSize": 4,
+        "step": 2
+      }
+    }
+  },
+  "finalUrl": "/outputs/1c371dfd-8cc9-4354-a41a-604562a32b6a/final.mp4",
+  "outputPath": "C:\\Users\\Quise\\Downloads\\auto-editor\\public\\outputs\\1c371dfd-8cc9-4354-a41a-604562a32b6a\\final.mp4",
+  "outputUrl": "/outputs/1c371dfd-8cc9-4354-a41a-604562a32b6a/final.mp4"
+}
